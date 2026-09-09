@@ -29,7 +29,7 @@
     <header>
       <div><b>TRAIL POCKET</b><small>帶住路線，離線出發</small></div>
       <div class="header-status">
-        <span class="version">v4.0.0-beta.7</span
+        <span class="version">v4.2.0</span
         ><span id="network" class="chip">檢查連線</span>
       </div>
     </header>
@@ -126,58 +126,92 @@
         </p>
       </section>
       <section id="settingsView" class="view hide">
-        <div class="eyebrow">TRAIL POCKET · V4.0.0 BETA 1</div>
-        <h1>設定</h1>
-        <p class="settings-intro">定位、地圖、安全提醒、離線檢查及使用說明集中在這裏。</p>
+        <header class="settings-hero">
+          <div>
+            <span class="settings-kicker">TRAIL POCKET</span>
+            <h1>設定</h1>
+            <p class="settings-intro">定位、離線地圖與 App 管理</p>
+          </div>
+          <div class="settings-landscape" aria-hidden="true"><i></i><i></i><i></i></div>
+        </header>
 
-        <section class="settings-card">
-          <div class="settings-card-head"><div><h2>GPS 與位置</h2><p>在這裏開啟定位，地圖及活動會共用同一個 GPS。</p></div></div>
+        <section class="settings-status-card" aria-labelledby="shellStatus">
+          <span id="shellIcon" class="settings-status-icon">○</span>
+          <div><strong id="shellStatus">檢查 App 離線狀態…</strong><small id="storageInfo"></small></div>
+          <span class="settings-chevron" aria-hidden="true">›</span>
+        </section>
+
+        <section class="settings-card settings-location-card">
+          <div class="settings-section-head">
+            <span class="settings-section-icon" data-icon="location">⌖</span>
+            <div><h2>定位與方向</h2><p>取得目前位置及行進方向</p></div>
+            <span class="settings-state-pill">● 尚未定位</span>
+          </div>
           <div class="gps-bar">
-            <button id="gps" class="primary">◎ 開始定位</button>
-            <div id="gpsStatus" role="status">GPS 位置只在裝置處理；在線底圖會向地圖服務請求畫面附近圖磚。熄屏後可能停止更新。</div>
+            <button id="gps" class="primary">開始定位與方向</button>
+            <div id="gpsStatus" role="status">GPS 位置只在裝置處理；熄屏後可能停止更新。</div>
           </div>
-          <div class="emergency-card">
-            <div><small>緊急位置（只在本機顯示）</small><strong id="emergencyCoords">等待 GPS 定位</strong><span id="emergencyMeta">不會自動聯絡救援服務</span></div>
-            <button id="copyPosition" disabled>複製座標</button>
+          <button id="compassToggle" class="settings-secondary-action">開啟手機指南針</button>
+          <p id="compassStatus" role="status">行走時顯示 GPS 行進方向；停留時可開啟手機指南針。</p>
+          <details class="settings-inline-details">
+            <summary>緊急位置與指南針說明</summary>
+            <div class="emergency-card">
+              <div><small>緊急位置（只在本機顯示）</small><strong id="emergencyCoords">等待 GPS 定位</strong><span id="emergencyMeta">不會自動聯絡救援服務</span></div>
+              <button id="copyPosition" disabled>複製座標</button>
+            </div>
+            <p class="fineprint">藍色扇形只表示方向，並非推薦路線。指南針可能受磁石、車輛及電子設備影響；未有可靠資料時不顯示。</p>
+          </details>
+        </section>
+
+        <section class="settings-card">
+          <div class="settings-section-head">
+            <span class="settings-section-icon">▱</span>
+            <div><h2>離線地圖</h2><p>下載地圖，無網絡時亦能使用</p></div>
+          </div>
+          <div class="settings-list">
+            <button id="settingsOfflineMaps"><span>△</span><b>南澳離線地圖</b><small>全州地圖包及公園快捷範圍</small><i>›</i></button>
+            <button id="settingsMapSource"><span>▱</span><b>地圖來源及 GeoPDF</b><small>線上、離線優先、GeoPDF 重疊及透明度</small><i>›</i></button>
           </div>
         </section>
 
         <section class="settings-card">
-          <h2>方向與指南針</h2>
-          <button id="compassToggle">開啟手機指南針</button>
-          <p id="compassStatus" role="status">行走時顯示 GPS 行進方向；停留時可開啟手機指南針。</p>
-          <p class="fineprint">藍色扇形只表示方向，並非推薦路線。指南針可能受磁石、車輛及電子設備影響；未有可靠資料時不顯示。地圖維持北向上，GeoPDF 按原圖方向校正。</p>
-        </section>
-        <section class="settings-card">
-          <h2>地圖與導航</h2>
+          <div class="settings-section-head">
+            <span class="settings-section-icon">≋</span>
+            <div><h2>地圖與活動</h2><p>調整顯示、導航及記錄方式</p></div>
+          </div>
           <div class="settings-list">
-            <button id="settingsMapSource"><span>▱</span><b>地圖來源及 GeoPDF</b><small>線上、離線優先、GeoPDF 重疊及透明度</small><i>›</i></button>
-            <button id="settingsLayers"><span>▧</span><b>離線地圖圖層</b><small>道路、建築物、設施、地名、等高線及坡度</small><i>›</i></button>
+            <button id="settingsLayers"><span>▧</span><b>地圖圖層</b><small>道路、設施、地名、等高線及坡度</small><i>›</i></button>
             <button id="settingsAlerts"><span>♧</span><b>偏離路線提醒</b><small>提醒距離、聲音及前景監察</small><i>›</i></button>
           </div>
-        </section>
-
-        <section class="settings-card">
-          <h2>活動</h2>
-          <label class="settings-switch"><span><b>活動時保持螢幕亮著</b><small>減少前景 GPS 被熄屏中斷，但會增加耗電。</small></span><input id="keepAwake" type="checkbox" checked></label>
+          <div class="settings-toggles">
+            <label class="settings-switch"><span><b>下載時加入 20 m 等高線</b><small>關閉可縮短下載時間</small></span><input id="downloadContours" type="checkbox"></label>
+            <label class="settings-switch"><span><b>活動時保持螢幕亮著</b><small>減少前景 GPS 被熄屏中斷</small></span><input id="keepAwake" type="checkbox" checked></label>
+          </div>
           <button id="settingsActivityHistory" class="settings-wide-button">查看活動紀錄</button>
         </section>
 
         <section class="settings-card settings-storage">
-          <h2>離線與本機資料</h2>
-          <label class="settings-switch"><span><b>下載時加入 20 m 等高線</b><small>關閉可大幅縮短下載時間；OSM 圖層、離線搜尋及步道路網仍會完整保留。</small></span><input id="downloadContours" type="checkbox"></label>
-          <label class="settings-switch"><span><b>備份時包括 GeoPDF</b><small>個人路線、活動及標記一定會備份；官方南澳地圖包只保存重新下載清單，不會塞入 JSON。</small></span><input id="backupGeoPdfs" type="checkbox" checked></label>
-          <div class="storage-card">
-            <div><span id="shellIcon">○</span><strong id="shellStatus">檢查 App 離線狀態…</strong><small id="storageInfo"></small></div>
-            <div class="storage-actions">
-              <button id="audit" class="audit-button">離線自檢</button><button id="persist">保護本機儲存</button><button id="backupAll">備份全部資料</button><button id="restoreAll">還原備份</button>
-              <input id="backupFile" type="file" accept=".json,.trailpocket,application/json" hidden />
-            </div>
+          <div class="settings-section-head">
+            <span class="settings-section-icon">⚙</span>
+            <div><h2>App 與資料</h2><p>更新、檢查、備份及管理儲存空間</p></div>
+            <small id="settingsVersion" class="settings-version">目前版本</small>
           </div>
+          <div class="settings-action-grid">
+            <button id="checkAppUpdate"><span>↻</span><b>檢查更新</b><small id="updateCheckStatus">目前版本</small></button>
+            <button id="audit" class="audit-button"><span>▣</span><b>離線自檢</b><small>檢查 App 及地圖</small></button>
+            <button id="backupAll"><span>⇧</span><b>備份全部資料</b><small>匯出安全備份</small></button>
+            <button id="restoreAll"><span>↶</span><b>還原備份</b><small>合併現有資料</small></button>
+            <button id="persist"><span>◇</span><b>保護本機儲存</b><small>要求瀏覽器保留資料</small></button>
+            <button id="cleanupLegacyMaps"><span>⌫</span><b>清理重複地圖</b><small id="cleanupLegacyStatus">只清理已安全覆蓋項目</small></button>
+            <input id="backupFile" type="file" accept=".json,.trailpocket,application/json" hidden />
+          </div>
+          <label class="settings-switch settings-backup-switch"><span><b>備份時包括 GeoPDF</b><small>備份檔案會較大</small></span><input id="backupGeoPdfs" type="checkbox" checked></label>
         </section>
 
-        <h2 class="settings-guide-title">使用及安全說明</h2>
-        <ol class="steps">
+        <section class="settings-help-group" aria-label="說明">
+          <details class="settings-guide">
+            <summary>使用與安全資訊</summary>
+            <ol class="steps">
           <li>
             <b>匯入官方 GeoPDF</b>
             <p>
@@ -222,28 +256,33 @@
               開啟路線後按「開始定位」，允許定位。「緊急位置」會顯示可複製經緯度、精度及更新時間；不會自動聯絡救援服務。灰點代表舊位置。
             </p>
           </li>
-        </ol>
-        <div class="notice">
+            </ol>
+            <div class="notice">
           <b>手機儲存要留意</b>
           <p>
             路線、活動、底圖及等高線只保存在目前瀏覽器／PWA。寫入前會檢查剩餘空間；清除網站資料、私密瀏覽或裝置儲存不足仍可能令資料消失。「保護本機儲存」亦唔代表永不被刪除。完整
             JSON 備份可合併還原，但檔案可能很大。
           </p>
-        </div>
-        <p class="fineprint">
+            </div>
+          </details>
+          <details class="settings-guide">
+            <summary>儲存與離線地圖說明</summary>
+            <p class="fineprint">
           20 m 等高線由 Mapzen Terrain Tiles／AWS Open Data
           高程格網在裝置計算；南澳資料需標示 © Commonwealth of Australia
           (Geoscience Australia)
           2017。大範圍會自動降低高程格網細緻度。線條只作地形參考，不能代替正式地形圖、現場路牌或安全判斷。此版不提供背景定位保證、即時封路、衛星影像或逐彎導航。
-        </p>
-        <div class="notice">
+            </p>
+            <div class="notice">
           <b>大型離線地圖</b>
           <p>
             每張上限 500 km²／128 MB。系統會拆成約 100 km²
             分區逐段下載，失敗時轉用備用服務；全部完成並檢查空間後才取代舊地圖。下載期間請保持頁面開啟。支援全球緯度
             ±85°，暫未支援跨國際換日線。
           </p>
-        </div>
+            </div>
+          </details>
+        </section>
       </section>
     </main>
     <nav aria-label="主要頁面">

@@ -149,3 +149,81 @@ nav{background:#fffffff2}nav button{width:160px;max-width:33.333%;display:flex;f
 /* v4.1.11 geo-anchored offline preview */
 .preview-bounds-toolbar{position:absolute;z-index:12;left:16px;right:16px;bottom:calc(116px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.96);box-shadow:0 6px 24px rgba(25,63,50,.20);color:#193f32}.preview-bounds-toolbar span{display:flex;min-width:0;flex-direction:column;gap:2px}.preview-bounds-toolbar b{font-size:13px}.preview-bounds-toolbar small{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.preview-bounds-toolbar button{flex:0 0 auto;min-height:38px;padding:7px 11px;border:0;border-radius:11px;background:#193f32;color:#fff;font-size:11px;font-weight:750}.preview-bounds-frame{display:none!important}
 @media(max-width:600px){.preview-bounds-toolbar{left:12px;right:12px;bottom:calc(108px + env(safe-area-inset-bottom));padding:9px 10px}.preview-bounds-toolbar small{max-width:48vw}}
+
+/* v4.2 settings information architecture */
+#settingsView{max-width:860px;margin:0 auto;padding-bottom:22px}
+.settings-hero{position:relative;min-height:126px;margin:-32px -20px 18px;padding:34px 24px 25px;overflow:hidden;background:linear-gradient(145deg,#f7faf3 10%,#eaf3e6 100%)}
+.settings-hero>div:first-child{position:relative;z-index:2}
+.settings-kicker{display:block;margin-bottom:4px;color:#6f8176;font-size:10px;font-weight:800;letter-spacing:.15em}
+.settings-hero h1{margin:0;font-size:38px;line-height:1.1;letter-spacing:-.05em}
+.settings-hero .settings-intro{margin:7px 0 0;color:#697870;font-size:14px}
+.settings-landscape{position:absolute;right:15px;bottom:0;width:210px;height:100px;opacity:.72}
+.settings-landscape:before,.settings-landscape:after,.settings-landscape i{content:"";position:absolute;bottom:-28px;display:block;width:105px;height:105px;border-radius:18px 0;transform:rotate(45deg);background:#c4d8c0}
+.settings-landscape:before{right:73px;width:82px;height:82px;background:#d5e4d1}
+.settings-landscape:after{right:8px;bottom:-19px;background:#aec9aa}
+.settings-landscape i:nth-child(1){right:-37px;bottom:-44px;background:#8eae8e}
+.settings-landscape i:nth-child(2){right:128px;bottom:-60px;width:120px;height:120px;background:#e2ecdf}
+.settings-landscape i:nth-child(3){right:22px;bottom:auto;top:8px;width:25px;height:25px;border-radius:50%;background:#eee6bd;transform:none}
+
+.settings-status-card{display:grid;grid-template-columns:54px minmax(0,1fr) 22px;align-items:center;gap:13px;margin:0 0 16px;padding:15px 17px;border:1px solid #dce7dc;border-radius:20px;background:rgba(255,255,255,.94);box-shadow:0 7px 24px rgba(25,63,50,.08)}
+.settings-status-icon{display:grid;width:48px;height:48px;place-items:center;border:6px solid #d8ead2;border-radius:50%;background:#72a66f;color:#fff;font-size:22px;font-weight:800}
+.settings-status-card strong,.settings-status-card small{display:block}.settings-status-card strong{font-size:16px}.settings-status-card small{margin-top:4px;color:var(--muted);font-size:11px;line-height:1.4}.settings-chevron{color:#6e7c74;font-size:27px}
+
+#settingsView .settings-card{max-width:none;margin:0 0 14px;padding:17px;border:1px solid #e2e9e2;border-radius:21px;background:#fff;box-shadow:0 5px 18px rgba(25,63,50,.055)}
+.settings-section-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:11px;margin-bottom:11px}
+.settings-section-icon{display:grid;width:42px;height:42px;place-items:center;border-radius:13px;background:#edf5eb;color:#245f4c;font-size:22px;font-weight:750}
+.settings-section-head h2{margin:0!important;font-size:18px!important;line-height:1.25}.settings-section-head p{display:block!important;margin:3px 0 0!important;color:var(--muted);font-size:11px!important;line-height:1.35}
+.settings-state-pill{align-self:start;margin-top:4px;padding:7px 10px;border-radius:999px;background:#f1f3f1;color:#77827d;font-size:10px;font-weight:750;white-space:nowrap}.settings-state-pill.is-active{background:#e3f2df;color:#24704d}
+.settings-version{color:#76837c;font-size:11px;white-space:nowrap}
+
+#settingsView .gps-bar{display:block;padding:2px 0 0}
+#settingsView .gps-bar button{width:100%;min-height:52px;border-radius:15px;background:#245f4c;font-size:15px;font-weight:800}
+#settingsView #gpsStatus{display:block;margin:9px 3px 0;color:var(--muted);font-size:10px;line-height:1.45;text-align:center}
+.settings-secondary-action{width:100%;margin-top:9px;background:#f4f7f2;border-color:#e4eae2;font-size:12px}
+#compassStatus{font-size:11px!important;text-align:center}
+.settings-inline-details{margin-top:8px;border-top:1px solid var(--border)}
+.settings-inline-details>summary{display:flex;min-height:42px;align-items:center;justify-content:space-between;cursor:pointer;list-style:none;color:var(--muted);font-size:11px;font-weight:700}.settings-inline-details>summary::-webkit-details-marker{display:none}.settings-inline-details>summary:after{content:'⌄';font-size:15px}.settings-inline-details[open]>summary:after{content:'⌃'}
+#settingsView .emergency-card{margin:2px 0 8px}
+
+#settingsView .settings-list{margin:0;border:1px solid #e6ebe5;border-radius:16px;overflow:hidden}
+#settingsView .settings-list button{grid-template-columns:40px minmax(0,1fr) 20px;min-height:68px;padding:11px 12px;border:0;border-bottom:1px solid #e6ebe5;background:#fbfcfa}
+#settingsView .settings-list button:last-child{border-bottom:0}
+#settingsView .settings-list button>span{display:grid;width:36px;height:36px;place-items:center;border-radius:11px;background:#edf4eb;color:#285f4d;font-size:19px}
+#settingsView .settings-list button b{font-size:14px}
+#settingsView .settings-list button small{display:block!important;font-size:10px;line-height:1.35}
+#settingsView .settings-list button i{display:grid;width:20px;place-items:center;color:#68766f;font-size:23px}
+#settingsView .settings-list button i svg{width:18px;height:18px}
+
+.settings-toggles{margin-top:8px;border-top:1px solid #edf0ec}
+#settingsView .settings-switch{min-height:55px;margin:0;padding:9px 2px;border-bottom:1px solid #edf0ec}
+#settingsView .settings-switch:last-child{border-bottom:0}
+#settingsView .settings-switch b{font-size:13px}#settingsView .settings-switch small{display:block;margin-top:3px;font-size:10px;line-height:1.3}
+#settingsView .settings-switch input{position:relative;width:46px;height:27px;margin:0;appearance:none;border-radius:999px;background:#d7ded8;transition:background .18s ease}
+#settingsView .settings-switch input:before{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0003;transition:transform .18s ease}
+#settingsView .settings-switch input:checked{background:#428366}#settingsView .settings-switch input:checked:before{transform:translateX(19px)}
+
+.settings-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.settings-action-grid button{display:grid;grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;min-height:66px;padding:10px 11px;border-color:#e4eae3;background:#fbfcfa;text-align:left}
+.settings-action-grid button>span{grid-row:1/3;color:#28614e;font-size:22px}.settings-action-grid button>b{font-size:12px}.settings-action-grid button>small{display:block!important;overflow:hidden;color:var(--muted);font-size:9px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
+.settings-action-grid .audit-button{background:#edf6e8;border-color:#d4e8cb}
+.settings-backup-switch{margin-top:8px!important}
+
+.settings-help-group{display:grid;gap:9px;margin-top:2px}
+#settingsView .settings-guide{max-width:none;margin:0;padding:0 15px;border:1px solid #e4eae3;border-radius:15px;background:#fff}
+#settingsView .settings-guide>summary{min-height:49px;color:#344f43;font-size:13px}
+#settingsView .settings-guide .steps{padding-left:22px}#settingsView .settings-guide .steps li{padding:8px 0}#settingsView .settings-guide .steps b{font-size:13px}#settingsView .settings-guide .steps p{font-size:11px;line-height:1.55}
+#settingsView .settings-guide .notice{padding:13px;margin:8px 0 14px}#settingsView .settings-guide>.fineprint{margin:4px 0 14px;font-size:11px;line-height:1.6}
+
+@media(max-width:600px){
+ #settingsView{margin:-25px -16px 0;padding:0 13px 22px;background:#f2f6ef}
+ .settings-hero{min-height:145px;margin:0 -13px 14px;padding:35px 18px 24px}.settings-hero h1{font-size:36px}.settings-landscape{right:-28px;width:195px;opacity:.68}
+ .settings-status-card{margin-bottom:13px;padding:13px 14px}.settings-status-card strong{font-size:15px}.settings-status-icon{width:44px;height:44px}
+ #settingsView .settings-card{margin-bottom:12px;padding:14px;border-radius:19px}.settings-section-head{grid-template-columns:40px minmax(0,1fr) auto}.settings-section-icon{width:38px;height:38px;font-size:20px}.settings-section-head h2{font-size:17px!important}
+ .settings-state-pill{padding:6px 8px;font-size:9px}.settings-version{font-size:10px}
+ #settingsView .settings-list button{min-height:65px}.settings-action-grid button{min-height:64px;padding:9px}
+}
+@media(min-width:720px){
+ #settingsView{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}#settingsView.hide{display:none}
+ .settings-hero,.settings-status-card,.settings-help-group{grid-column:1/-1}.settings-hero{margin:-32px 0 2px;border-radius:0 0 24px 24px}.settings-status-card{margin:0}
+ #settingsView .settings-card{margin:0}.settings-location-card,.settings-storage{grid-column:span 2}.settings-action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
