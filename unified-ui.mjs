@@ -2,7 +2,7 @@ import { OFFLINE_REGIONS } from './offline-regions.mjs';
 import * as store from './storage.mjs';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION_FALLBACK='v4.1.6';
+const APP_VERSION_FALLBACK='v4.1.7';
 const paths = {
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
  saved:'<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
@@ -85,6 +85,32 @@ function setupOfflineLibraryLayout(){
  updateCount();window.addEventListener('trail:parks-changed',updateCount);
 }
 
+function compactSettingsPage(){
+ const settings=$('settingsView');
+ if(!settings)return;
+ const intro=settings.querySelector('.settings-intro');
+ if(intro)intro.hidden=true;
+ for(const card of settings.querySelectorAll('.settings-card')){
+  const notes=[...card.children].filter(el=>el.tagName==='P'&&el.id!=='compassStatus');
+  if(notes.length){
+   const details=document.createElement('details');
+   details.className='settings-help';
+   details.innerHTML='<summary>說明</summary>';
+   for(const note of notes)details.append(note);
+   card.append(details);
+  }
+ }
+ const guideTitle=settings.querySelector('.settings-guide-title'),steps=settings.querySelector('.steps');
+ if(guideTitle&&steps){
+  const details=document.createElement('details');
+  details.className='settings-guide settings-all-guide';
+  details.innerHTML='<summary>使用及安全說明</summary>';
+  guideTitle.before(details);
+  details.append(steps);
+  guideTitle.remove();
+ }
+}
+
 async function checkAppUpdate(){
  const button=$('checkAppUpdate'),status=$('updateCheckStatus');
  if(!button||!status)return;
@@ -154,6 +180,7 @@ export function setupUnifiedUI(ctx) {
  const downloadGuide=document.createElement('details');downloadGuide.className='settings-guide';downloadGuide.innerHTML='<summary>離線地圖格式及下載說明</summary>';for(const note of [...$('offlineView').querySelectorAll('.fineprint')])downloadGuide.append(note);$('settingsView').append(downloadGuide);
  for(const b of row.querySelectorAll('button'))b.textContent=b.textContent.replace(/^[＋✎▧]\s*/, '');for(const b of items.querySelectorAll('button'))b.textContent=b.textContent.replace(/^[☀⌁✎]\s*/, '');for(const [id,title]of [['settingsMapSource','地圖來源及 GeoPDF'],['settingsLayers','地圖圖層'],['settingsAlerts','偏离路線提醒']]){const b=$(id);b.querySelector('span').innerHTML=icon(id==='settingsMapSource'?'layers':id==='settingsLayers'?'map':'location');b.querySelector('i').innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 7 7-7 7"/></svg>';}
  setupOfflineLibraryLayout();
+ compactSettingsPage();
  requestAnimationFrame(syncParkRows);
  syncVisibleVersion();
  navigator.serviceWorker?.addEventListener('controllerchange',()=>setTimeout(syncVisibleVersion,50));
