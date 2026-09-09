@@ -2,6 +2,7 @@ import { OFFLINE_REGIONS } from './offline-regions.mjs';
 import * as store from './storage.mjs';
 
 const $ = id => document.getElementById(id);
+const APP_VERSION_FALLBACK='v4.1.5';
 const paths = {
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
  saved:'<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
@@ -17,6 +18,34 @@ const paths = {
 const icon = name => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name]}</svg>`;
 const parkFor = name => OFFLINE_REGIONS.find(region => region.name === name);
 const fmtBytes=n=>n>=1048576?`${(n/1048576).toFixed(1)} MB`:`${Math.max(1,Math.round(n/1024))} KB`;
+const cleanVersion=value=>String(value||'').match(/v\d+\.\d+\.\d+(?:[-+][\w.-]+)?/i)?.[0]||APP_VERSION_FALLBACK;
+
+function applyVisibleVersion(version){
+ const v=cleanVersion(version);
+ const header=document.querySelector('.header-status .version');if(header)header.textContent=v;
+ const settingsEyebrow=document.querySelector('#settingsView>.eyebrow');if(settingsEyebrow)settingsEyebrow.textContent=`TRAIL POCKET · ${v.toUpperCase()}`;
+ const status=$('updateCheckStatus');if(status&&!/正在檢查|發現新版本|檢查失敗/.test(status.textContent||''))status.textContent=`目前版本 ${v}`;
+ return v;
+}
+
+function workerVersion(worker,timeout=1800){
+ return new Promise(resolve=>{
+  if(!worker?.postMessage)return resolve(null);
+  const channel=new MessageChannel(),timer=setTimeout(()=>resolve(null),timeout);
+  channel.port1.onmessage=event=>{clearTimeout(timer);resolve(event.data?.version||null);};
+  try{worker.postMessage({type:'STATUS'},[channel.port2]);}catch{clearTimeout(timer);resolve(null);}
+ });
+}
+
+async function syncVisibleVersion(){
+ applyVisibleVersion(APP_VERSION_FALLBACK);
+ try{
+  const scope=new URL('./',import.meta.url).href,reg=await navigator.serviceWorker?.getRegistration(scope);
+  const worker=navigator.serviceWorker?.controller||reg?.active;
+  const version=await workerVersion(worker);
+  if(version)applyVisibleVersion(version);
+ }catch{}
+}
 
 function syncParkRows(){
  const api=window.trailPocketPackages,list=$('regionList');
@@ -71,8 +100,13 @@ async function checkAppUpdate(){
    worker.addEventListener('statechange',()=>{if(['installed','redundant'].includes(worker.state)){clearTimeout(timer);resolve();}});
   });
   if(reg.waiting){
-   status.textContent='發現新版本，可立即更新';$('updates')?.classList.remove('hide');
-  }else status.textContent=`已是最新版本 · v4.1.0 · ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+   const waitingVersion=cleanVersion(await workerVersion(reg.waiting));
+   status.textContent=`發現新版本 ${waitingVersion}，可立即更新`;
+   $('updates')?.classList.remove('hide');
+  }else{
+   const current=applyVisibleVersion(await workerVersion(navigator.serviceWorker?.controller||reg.active)||APP_VERSION_FALLBACK);
+   status.textContent=`已是最新版本 · ${current} · ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+  }
  }catch(error){status.textContent='檢查失敗：'+(error?.message||'請稍後再試');}
  finally{button.disabled=false;}
 }
@@ -101,8 +135,7 @@ async function cleanupLegacyMaps(){
 }
 
 export function setupUnifiedUI(ctx) {
- document.querySelector('.header-status .version').textContent='v4.1.0';
- const settingsEyebrow=document.querySelector('#settingsView>.eyebrow');if(settingsEyebrow)settingsEyebrow.textContent='TRAIL POCKET · V4.1.0';
+ applyVisibleVersion(APP_VERSION_FALLBACK);
  const heading=document.createElement('section');heading.id='libraryHeader';heading.className='library-header hide';
  heading.innerHTML='<h1>我的</h1><div class="library-tabs" role="tablist" aria-label="我的分類"><button id="myRoutes" role="tab" aria-selected="true">路線</button><button id="myMaps" role="tab" aria-selected="false">離線地圖</button><button id="myActivities" role="tab" aria-selected="false">活動</button><button id="myMarkers" role="tab" aria-selected="false">標記</button></div>';
  document.querySelector('main').prepend(heading);
@@ -117,9 +150,11 @@ export function setupUnifiedUI(ctx) {
  for(const id of ['jumpPlace','selectArea']){const button=$(id);button.textContent=id==='jumpPlace'?'搜尋地點':'下載地圖範圍';items.append(button);}const quickMarker=document.createElement('button');quickMarker.textContent='標記目前位置';quickMarker.onclick=()=>{$('addMarker').click();menu.open=false;};items.append(quickMarker);const tools=document.querySelector('.trail-tools');if(tools)items.append(tools);items.addEventListener('click',e=>{if(e.target.closest('button'))menu.open=false;});
  const extras=document.createElement('details');extras.className='library-actions';extras.innerHTML='<summary>新增及匯入</summary><div></div>';const row=extras.querySelector('div'),routeHeading=document.querySelector('#routesView .heading');for(const b of [...routeHeading.querySelectorAll('button')]){if(b.id==='import')row.append(b);else b.hidden=true;}const routeTools=document.querySelector('#routesView .route-tools');if(routeTools)for(const b of [...routeTools.querySelectorAll('button')])row.append(b);$('routesView').prepend(extras);
  $('settingsActivityHistory').hidden=true;$('closeActivityHistory').hidden=true;const extraHistory=$('activityHistory');extraHistory.hidden=true;document.querySelectorAll('.eyebrow,.activity-heading small').forEach(e=>e.hidden=true);document.querySelector('#routesView h1').textContent='路線';$('startActivity').textContent='開始活動';
- const appCard=document.createElement('section');appCard.className='settings-card';appCard.innerHTML=`<h2>App 與儲存</h2><p>Trail Pocket v4.1 會檢查 PWA 更新，亦可安全清走已被正式南澳地圖完整覆蓋嘅舊式離線包。</p><div class="settings-list"><button id="checkAppUpdate"><span>${icon('refresh')}</span><b>檢查更新</b><small id="updateCheckStatus">目前版本 v4.1.0</small><i>›</i></button><button id="cleanupLegacyMaps"><span>${icon('trash')}</span><b>清理重複舊地圖</b><small id="cleanupLegacyStatus">保留 GPX／KML、活動、標記、GeoPDF 及有等高線嘅自訂地圖</small><i>›</i></button></div>`;const storageCard=document.querySelector('#settingsView .settings-storage');storageCard?.before(appCard);$('checkAppUpdate').onclick=checkAppUpdate;$('cleanupLegacyMaps').onclick=cleanupLegacyMaps;
+ const appCard=document.createElement('section');appCard.className='settings-card';appCard.innerHTML=`<h2>App 與儲存</h2><p>Trail Pocket v4.1 會檢查 PWA 更新，亦可安全清走已被正式南澳地圖完整覆蓋嘅舊式離線包。</p><div class="settings-list"><button id="checkAppUpdate"><span>${icon('refresh')}</span><b>檢查更新</b><small id="updateCheckStatus">目前版本 ${APP_VERSION_FALLBACK}</small><i>›</i></button><button id="cleanupLegacyMaps"><span>${icon('trash')}</span><b>清理重複舊地圖</b><small id="cleanupLegacyStatus">保留 GPX／KML、活動、標記、GeoPDF 及有等高線嘅自訂地圖</small><i>›</i></button></div>`;const storageCard=document.querySelector('#settingsView .settings-storage');storageCard?.before(appCard);$('checkAppUpdate').onclick=checkAppUpdate;$('cleanupLegacyMaps').onclick=cleanupLegacyMaps;
  const downloadGuide=document.createElement('details');downloadGuide.className='settings-guide';downloadGuide.innerHTML='<summary>離線地圖格式及下載說明</summary>';for(const note of [...$('offlineView').querySelectorAll('.fineprint')])downloadGuide.append(note);$('settingsView').append(downloadGuide);
  for(const b of row.querySelectorAll('button'))b.textContent=b.textContent.replace(/^[＋✎▧]\s*/, '');for(const b of items.querySelectorAll('button'))b.textContent=b.textContent.replace(/^[☀⌁✎]\s*/, '');for(const [id,title]of [['settingsMapSource','地圖來源及 GeoPDF'],['settingsLayers','地圖圖層'],['settingsAlerts','偏离路線提醒']]){const b=$(id);b.querySelector('span').innerHTML=icon(id==='settingsMapSource'?'layers':id==='settingsLayers'?'map':'location');b.querySelector('i').innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 7 7-7 7"/></svg>';}
  setupOfflineLibraryLayout();
  requestAnimationFrame(syncParkRows);
+ syncVisibleVersion();
+ navigator.serviceWorker?.addEventListener('controllerchange',()=>setTimeout(syncVisibleVersion,50));
 }
