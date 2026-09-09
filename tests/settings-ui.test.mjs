@@ -27,12 +27,12 @@ test('settings release version stays aligned with the service worker', async () 
     readFile(new URL('sw.js', root), 'utf8'),
   ]);
 
-  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.5/);
+  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.6/);
 });
 
 test('mobile navigation counts the iPhone safe area only once', async () => {
   const css = await readFile(new URL('unified-ui.css', root), 'utf8');
-  const fix = css.match(/v4\.2\.5:[\s\S]*$/)?.[0] || '';
+  const fix = css.match(/v4\.2\.6:[\s\S]*$/)?.[0] || '';
   assert.match(fix, /bottom:max\(6px,env\(safe-area-inset-bottom\)\)/);
   assert.match(fix, /padding:5px 6px/);
   assert.doesNotMatch(fix, /padding[^;]*safe-area-inset-bottom/);
@@ -67,4 +67,17 @@ test('saved activities can be deleted and the mobile activity sheet stays compac
   assert.match(ui, /deleteSavedActivity/);
   assert.match(css, /#activityProfile \{ min-height:0;padding:0; \}/);
   assert.match(css, /\.activity-actions \{\s*position:static;/);
+});
+
+
+test('GeoPDF overlay avoids full-image work on every mobile pointer event', async () => {
+  const [map, geoPdf] = await Promise.all([
+    readFile(new URL('map.mjs', root), 'utf8'),
+    readFile(new URL('geopdf.mjs', root), 'utf8'),
+  ]);
+  assert.match(map, /const cells = this\.w <= 700 \? 6 : 8/);
+  assert.match(map, /Skip cells outside the viewport/);
+  assert.match(map, /drawImage\(this\.geoImage, sx, sy, sw, sh, sx, sy, sw, sh\)/);
+  assert.match(map, /requestDraw\(\)/);
+  assert.match(geoPdf, /cachedImageId === record\.id && cachedImage/);
 });

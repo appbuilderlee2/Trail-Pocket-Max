@@ -1,6 +1,6 @@
 {
   "name": "trail-pocket-pwa",
-  "version": "4.2.5",
+  "version": "4.2.6",
   "private": true,
   "type": "module",
   "description": "Local-first hiking routes with selectable offline maps, search and path routing",

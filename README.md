@@ -1,10 +1,14 @@
-# Trail Pocket PWA v4.2.5
+# Trail Pocket PWA v4.2.6
 
 Trail Pocket is an offline-first hiking PWA designed for iPhone and modern browsers, with a strong focus on reliable South Australia hiking maps.
 
 > **Current status:** the v4 production package infrastructure is live and the seven South Australia regions are available through the production catalog. Real-iPhone field testing remains recommended before relying on the app for a remote hike.
 
-## v4.2.5
+## v4.2.6
+
+- Speeds up GeoPDF overlays by drawing only visible image cells instead of the full high-resolution bitmap for every mesh triangle.
+- Coalesces rapid pan, pinch, compass and GPS updates to one paint per animation frame.
+- Uses a lighter mobile overlay mesh and retains the most recently decoded GeoPDF while switching map sources.
 
 - Rebuilt Settings with a clearer mobile-first hierarchy.
 - Added an at-a-glance offline shell and storage summary.

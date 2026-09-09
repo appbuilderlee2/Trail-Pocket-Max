@@ -88,6 +88,7 @@ export class TrailMap {
     this.fix = null;
     this.pointers = new Map();
     this.gesture = null;
+    this.drawFrame = 0;
     this.onPan = onPan;
     new ResizeObserver(() => this.resize()).observe(canvas);
     const state = () => {
@@ -122,7 +123,7 @@ export class TrailMap {
         if (next.d && last.d) {
           const r = canvas.getBoundingClientRect();
           this.zoom(last.d / next.d, next.x - r.left, next.y - r.top);
-        } else this.draw();
+        } else this.requestDraw();
       }
       this.gesture = next;
     });
@@ -158,6 +159,15 @@ export class TrailMap {
     this.ctx.setTransform(d, 0, 0, d, 0, 0);
     this.vector?.resize();
     this.draw();
+  }
+  requestDraw() {
+    if (this.drawFrame) return;
+    const schedule =
+      globalThis.requestAnimationFrame || ((callback) => setTimeout(callback, 16));
+    this.drawFrame = schedule(() => {
+      this.drawFrame = 0;
+      this.draw();
+    });
   }
   setLayers(layers) {
     this.layers = { ...layers };
@@ -234,14 +244,14 @@ export class TrailMap {
       this.geoCenter[0] += (x - this.w / 2) * (this.geoUnits - u);
       this.geoCenter[1] += (y - this.h / 2) * (this.geoUnits - u);
       this.geoUnits = u;
-      this.draw();
+      this.requestDraw();
       return;
     }
     const u = Math.max(0.15, Math.min(200000, this.units * f));
     this.center[0] += (x - this.w / 2) * (this.units - u);
     this.center[1] += (y - this.h / 2) * (this.units - u);
     this.units = u;
-    this.draw();
+    this.requestDraw();
   }
   setGeoPdf(record, image, { overlay = false, opacity = 0.68 } = {}) {
     this.geoPdf = record || null;
@@ -394,7 +404,7 @@ export class TrailMap {
   }
   setCompass(reading) {
     this.compass = reading;
-    this.draw();
+    this.requestDraw();
   }
   drawDirection(c, p, point, screen) {
     const direction = chooseHeading(this.fix, this.compass);
@@ -414,7 +424,7 @@ export class TrailMap {
         }
       } else this.center = project([fix.coords.longitude, fix.coords.latitude]);
     }
-    this.draw();
+    this.requestDraw();
   }
   geoScreen(point) {
     const p = geoToPage(this.geoPdf.transform, point);
@@ -445,8 +455,11 @@ export class TrailMap {
   }
   drawGeoOverlay(c) {
     if (!this.geoPdf || !this.geoImage || !this.geoOverlay) return;
-    const cols = 10,
-      rows = 10,
+    // A smaller mesh is visually sufficient on phones and avoids hundreds of
+    // full-resolution image draws for every pointer event.
+    const cells = this.w <= 700 ? 6 : 8,
+      cols = cells,
+      rows = cells,
       width = this.geoImage.width,
       height = this.geoImage.height,
       point = (u, v) => {
@@ -455,6 +468,14 @@ export class TrailMap {
       },
       drawTriangle = (source, target) => {
         if (target.some((p) => !p)) return;
+        const targetX = target.map((p) => p[0]),
+          targetY = target.map((p) => p[1]),
+          minX = Math.min(...targetX),
+          maxX = Math.max(...targetX),
+          minY = Math.min(...targetY),
+          maxY = Math.max(...targetY);
+        // Skip cells outside the viewport before touching the large bitmap.
+        if (maxX < 0 || minX > this.w || maxY < 0 || minY > this.h) return;
         const [s0, s1, s2] = source,
           [d0, d1, d2] = target,
           determinant =
@@ -477,7 +498,16 @@ export class TrailMap {
               determinant,
           ],
           x = coefficient(d0[0], d1[0], d2[0]),
-          y = coefficient(d0[1], d1[1], d2[1]);
+          y = coefficient(d0[1], d1[1], d2[1]),
+          sourceX = source.map((p) => p[0]),
+          sourceY = source.map((p) => p[1]),
+          sx = Math.max(0, Math.floor(Math.min(...sourceX) - 1)),
+          sy = Math.max(0, Math.floor(Math.min(...sourceY) - 1)),
+          ex = Math.min(width, Math.ceil(Math.max(...sourceX) + 1)),
+          ey = Math.min(height, Math.ceil(Math.max(...sourceY) + 1)),
+          sw = ex - sx,
+          sh = ey - sy;
+        if (sw <= 0 || sh <= 0) return;
         c.save();
         c.beginPath();
         c.moveTo(...d0);
@@ -486,7 +516,8 @@ export class TrailMap {
         c.closePath();
         c.clip();
         c.transform(x[0], y[0], x[1], y[1], x[2], y[2]);
-        c.drawImage(this.geoImage, 0, 0);
+        // Draw only this mesh cell instead of the full 4096 px image.
+        c.drawImage(this.geoImage, sx, sy, sw, sh, sx, sy, sw, sh);
         c.restore();
       };
     c.save();

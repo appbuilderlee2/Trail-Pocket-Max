@@ -3,7 +3,7 @@ import * as store from './storage.mjs';
 
 const $ = id => document.getElementById(id);
 let previewOfflineBounds=(bounds,name)=>{};
-const APP_VERSION_FALLBACK='v4.2.5';
+const APP_VERSION_FALLBACK='v4.2.6';
 const paths = {
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
  saved:'<path d="M6 3h12v18l-6-4-6 4V3Z"/>',

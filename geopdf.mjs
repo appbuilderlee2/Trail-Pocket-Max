@@ -10,6 +10,8 @@ export function setupGeoPdf(ctx) {
     active = null,
     activeImage = null,
     activeOverlay = false,
+    cachedImageId = null,
+    cachedImage = null,
     busy = false;
   const el = (tag, text, cls) => {
     const n = document.createElement(tag);
@@ -57,12 +59,16 @@ export function setupGeoPdf(ctx) {
     $("geoPdfFile").click();
   }
   async function image(record) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(Error("未能讀取已儲存 GeoPDF 圖像。"));
-      img.src = record.imageData;
+    if (cachedImageId === record.id && cachedImage) return cachedImage;
+    const img = await new Promise((resolve, reject) => {
+      const next = new Image();
+      next.onload = () => resolve(next);
+      next.onerror = () => reject(Error("未能讀取已儲存 GeoPDF 圖像。"));
+      next.src = record.imageData;
     });
+    cachedImageId = record.id;
+    cachedImage = img;
+    return img;
   }
   async function importFile(file) {
     busy = true;
@@ -176,6 +182,10 @@ export function setupGeoPdf(ctx) {
           )
             return;
           await store.removeGeoPdf(item.id);
+          if (cachedImageId === item.id) {
+            cachedImageId = null;
+            cachedImage = null;
+          }
           if (active?.id === item.id) close();
           await refresh();
           ctx.storageInfo();
