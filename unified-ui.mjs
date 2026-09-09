@@ -3,7 +3,7 @@ import * as store from './storage.mjs';
 
 const $ = id => document.getElementById(id);
 let previewOfflineBounds=(bounds,name)=>{};
-const APP_VERSION_FALLBACK='v4.2.1';
+const APP_VERSION_FALLBACK='v4.2.2';
 const paths = {
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
  saved:'<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
@@ -202,7 +202,7 @@ export function setupUnifiedUI(ctx) {
  previewOfflineBounds=ctx.previewBounds||previewOfflineBounds;
  applyVisibleVersion(APP_VERSION_FALLBACK);
  const heading=document.createElement('section');heading.id='libraryHeader';heading.className='library-header hide';
- heading.innerHTML='<h1>我的</h1><div class="library-tabs" role="tablist" aria-label="我的分類"><button id="myRoutes" role="tab" aria-selected="true">路線</button><button id="myMaps" role="tab" aria-selected="false">離線地圖</button><button id="myActivities" role="tab" aria-selected="false">活動</button><button id="myMarkers" role="tab" aria-selected="false">標記</button></div>';
+ heading.innerHTML='<div class="library-tabs" role="tablist" aria-label="我的分類"><button id="myRoutes" role="tab" aria-selected="true">路線</button><button id="myMaps" role="tab" aria-selected="false">離線地圖</button><button id="myActivities" role="tab" aria-selected="false">活動</button><button id="myMarkers" role="tab" aria-selected="false">標記</button></div>';
  document.querySelector('main').prepend(heading);
  $('myRoutes').onclick=()=>ctx.nav('routes');$('myMaps').onclick=()=>ctx.nav('offline');$('myActivities').onclick=()=> $('activityHistory').click();$('myMarkers').onclick=()=>ctx.nav('markers');
  window.addEventListener('trail:view',({detail:name})=>{heading.classList.toggle('hide',!['routes','offline','history','markers'].includes(name));for(const [id,view] of [['myRoutes','routes'],['myMaps','offline'],['myActivities','history'],['myMarkers','markers']]) $(id).setAttribute('aria-selected',String(view===name));$('mapToolMenu')?.removeAttribute('open');if(name==='offline')requestAnimationFrame(syncParkRows);});

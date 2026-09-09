@@ -27,5 +27,16 @@ test('settings release version stays aligned with the service worker', async () 
     readFile(new URL('sw.js', root), 'utf8'),
   ]);
 
-  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.1/);
+  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.2/);
+});
+
+test('bottom navigation labels are not repeated as page-top titles', async () => {
+  const [html, ui] = await Promise.all([
+    readFile(new URL('index.html', root), 'utf8'),
+    readFile(new URL('unified-ui.mjs', root), 'utf8'),
+  ]);
+
+  const settings = html.match(/<section id="settingsView"[\s\S]*?<\/section>\s*<\/main>/)?.[0] || '';
+  assert.doesNotMatch(settings, /<h1>設定<\/h1>/);
+  assert.doesNotMatch(ui, /library-header[^;]*<h1>我的<\/h1>/);
 });
