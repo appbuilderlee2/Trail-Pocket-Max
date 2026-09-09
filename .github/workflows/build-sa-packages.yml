@@ -1,0 +1,135 @@
+name: Build South Australia offline packages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-sa-packages.yml'
+      - 'config/sa-regions.json'
+      - 'scripts/build-package-indexes.mjs'
+      - 'scripts/write-package-manifest.mjs'
+      - 'package-index-core.mjs'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Build pilot first or all seven production regions
+        type: choice
+        options: [all, pilot]
+        default: all
+      release_tag:
+        description: Map release tag
+        default: maps-v4-current
+  schedule:
+    - cron: '20 3 1 * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: south-australia-offline-packages
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.regions.outputs.matrix }}
+      release_tag: ${{ steps.regions.outputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: regions
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REQUESTED_SCOPE: ${{ inputs.scope }}
+          REQUESTED_TAG: ${{ inputs.release_tag }}
+        run: |
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require('node:fs');
+          const regions = JSON.parse(fs.readFileSync('config/sa-regions.json', 'utf8'));
+          const full = process.env.EVENT_NAME === 'schedule'
+            || process.env.EVENT_NAME === 'push'
+            || process.env.REQUESTED_SCOPE === 'all';
+          const selected = regions.filter(region => full ? !region.pilot : region.pilot);
+          const include = selected.map(region => ({
+            ...region,
+            bounds: region.bounds.join(','),
+            pilot: Boolean(region.pilot),
+          }));
+          if (!include.length) throw new Error('No South Australia package regions selected');
+          if (full && include.length !== 7) throw new Error(`Expected 7 production regions, got ${include.length}`);
+          const tag = process.env.EVENT_NAME === 'schedule' || process.env.EVENT_NAME === 'push'
+            ? 'maps-v4-current'
+            : process.env.REQUESTED_TAG || (full ? 'maps-v4-current' : 'maps-v4-pilot');
+          console.log(`matrix=${JSON.stringify({include})}`);
+          console.log(`release_tag=${tag}`);
+          NODE
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: sudo apt-get update && sudo apt-get install -y osmium-tool
+      - name: Download current South Australia OSM extract
+        run: curl --fail --location --retry 4 -o south-australia.osm.pbf https://download.geofabrik.de/australia-oceania/australia/south-australia-latest.osm.pbf
+      - name: Extract exact package bounds
+        run: osmium extract --strategy=complete_ways --bbox '${{ matrix.bounds }}' south-australia.osm.pbf -o region.osm.pbf
+      - name: Build OpenMapTiles-compatible PMTiles
+        run: |
+          curl --fail --location --retry 4 -o planetiler.jar https://github.com/onthegomap/planetiler/releases/download/v0.10.1/planetiler.jar
+          java -Xmx4g -jar planetiler.jar --osm-path=region.osm.pbf --output='${{ matrix.id }}-map.pmtiles' --download --force --maxzoom=15
+      - name: Build offline search and walking graph
+        run: |
+          osmium tags-filter region.osm.pbf w/highway nwr/name nwr/amenity nwr/tourism nwr/natural=peak nwr/place nwr/leisure nwr/boundary -o index-source.osm.pbf
+          osmium export --output-format=geojsonseq index-source.osm.pbf -o region.geojsonseq
+          node scripts/build-package-indexes.mjs region.geojsonseq '${{ matrix.id }}-search.index' '${{ matrix.id }}-routing.graph'
+      - name: Compress v4.1 search and routing data
+        run: |
+          gzip -9 -n '${{ matrix.id }}-search.index'
+          gzip -9 -n '${{ matrix.id }}-routing.graph'
+          ls -lh '${{ matrix.id }}-map.pmtiles' '${{ matrix.id }}-search.index.gz' '${{ matrix.id }}-routing.graph.gz'
+      - name: Create sizes and SHA-256 manifest
+        env:
+          TAG: ${{ needs.prepare.outputs.release_tag }}
+        run: node scripts/write-package-manifest.mjs '${{ matrix.id }}' '${{ matrix.name }}' '${{ matrix.bounds }}' "$(date -u +%Y.%m.%d)-v4.1" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}" '${{ matrix.id }}-manifest.json'
+      - name: Publish package assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.release_tag }}
+          files: |
+            ${{ matrix.id }}-map.pmtiles
+            ${{ matrix.id }}-search.index.gz
+            ${{ matrix.id }}-routing.graph.gz
+            ${{ matrix.id }}-manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manifest-${{ matrix.id }}
+          path: ${{ matrix.id }}-manifest.json
+          retention-days: 7
+
+  index:
+    needs: [prepare, build]
+    if: always() && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'manifest-*', merge-multiple: true}
+      - run: |
+          count=$(find . -maxdepth 1 -name '*-manifest.json' | wc -l)
+          if [ "$count" -ne 7 ]; then
+            echo "Expected 7 production manifests, got $count" >&2
+            exit 1
+          fi
+          jq -s '{schema:1,generated:(now|todate),packages:.}' ./*-manifest.json > sa-index.json
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.release_tag }}
+          files: sa-index.json
