@@ -1,0 +1,124 @@
+name: Apply offline preview feature
+on:
+  push:
+    paths:
+      - '.preview-bounds-trigger'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v4.1.10 preview patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new, count=1):
+              p=Path(path); s=p.read_text()
+              if old not in s:
+                  raise SystemExit(f'Pattern not found in {path}: {old[:120]!r}')
+              s=s.replace(old,new,count)
+              p.write_text(s)
+
+          # app.mjs: reusable preview controller using the real map + visible bounds frame.
+          p=Path('app.mjs'); s=p.read_text()
+          anchor='function mini(route) {'
+          insert=r'''function previewOfflineBounds(rawBounds, name = "離線地圖範圍") {
+  const bounds = Array.isArray(rawBounds)
+    ? { west: rawBounds[0], south: rawBounds[1], east: rawBounds[2], north: rawBounds[3] }
+    : rawBounds;
+  if (!bounds || ![bounds.west,bounds.south,bounds.east,bounds.north].every(Number.isFinite)) {
+    toast("未能讀取呢個離線地圖範圍。");
+    return;
+  }
+  follow = false;
+  $("follow").classList.remove("selected");
+  nav("map");
+  requestAnimationFrame(() => {
+    map.resize();
+    map.fitBounds(bounds);
+    let frame = $("previewBoundsFrame");
+    if (!frame) {
+      frame = document.createElement("div");
+      frame.id = "previewBoundsFrame";
+      frame.className = "preview-bounds-frame";
+      frame.innerHTML = '<span id="previewBoundsLabel"></span><button id="closeBoundsPreview">返回離線下載</button>';
+      document.querySelector(".map-wrap")?.append(frame);
+      $("closeBoundsPreview").onclick = () => {
+        frame.classList.add("hide");
+        nav("offline");
+      };
+    }
+    const a = map.screen(project([bounds.west, bounds.north]));
+    const z = map.screen(project([bounds.east, bounds.south]));
+    const left = Math.min(a[0], z[0]), top = Math.min(a[1], z[1]);
+    frame.style.left = `${left}px`;
+    frame.style.top = `${top}px`;
+    frame.style.width = `${Math.max(28, Math.abs(z[0]-a[0]))}px`;
+    frame.style.height = `${Math.max(28, Math.abs(z[1]-a[1]))}px`;
+    $("previewBoundsLabel").textContent = name;
+    frame.classList.remove("hide");
+    $("mapTitle").textContent = name;
+    $("mapMeta").textContent = "離線地圖範圍預覽 · 尚未開始下載";
+    $("mapBadge").classList.add("hide");
+  });
+}
+'''
+          if 'function previewOfflineBounds(' not in s:
+              s=s.replace(anchor,insert+anchor,1)
+          s=s.replace('const packageManager = setupPackageManager({ask,toast,failure,changed:()=>explore.refresh()});',
+                      'const packageManager = setupPackageManager({ask,toast,failure,changed:()=>explore.refresh(),previewBounds:previewOfflineBounds});',1)
+          s=s.replace('setupUnifiedUI({nav});','setupUnifiedUI({nav,previewBounds:previewOfflineBounds});',1)
+          p.write_text(s)
+
+          # package-manager.mjs: preview every production region and the whole state extent.
+          p=Path('package-manager.mjs'); s=p.read_text()
+          s=s.replace(
+            "root.innerHTML='<div class=\"package-title\"><div><span>V4.1 離線向量地圖</span><h2>南澳大利亞州</h2><p id=\"packageSummary\">正在讀取地圖包目錄…</p></div><button id=\"downloadSouthAustralia\" disabled>下載全部</button></div>",
+            "root.innerHTML='<div class=\"package-title\"><div><span>V4.1 離線向量地圖</span><h2>南澳大利亞州</h2><p id=\"packageSummary\">正在讀取地圖包目錄…</p></div><div class=\"package-title-actions\"><button id=\"previewSouthAustralia\" disabled>預覽全部</button><button id=\"downloadSouthAustralia\" disabled>下載全部</button></div></div>",1)
+          old="row.innerHTML=`<span class=\"package-state\">${ready?'✓':hasUpdate?'↻':'↓'}</span><div><b>${manifest.name}</b><small>${mb(packageBytes(manifest))}${manifest.packageFormat==='v4.1-slim'?' · 瘦身包':''}${hasUpdate?` · 已保留 ${current.version}`:''}${s?.state==='paused'?' · 可繼續':s?.state==='failed'?' · 需要修復':''}</small></div><div class=\"package-actions\"><button>${actionLabel}</button>${!ready&&['paused','failed'].includes(s?.state)?'<button class=\"package-cancel\">取消</button>':''}</div>`;"
+          new="row.innerHTML=`<span class=\"package-state\">${ready?'✓':hasUpdate?'↻':'↓'}</span><div><b>${manifest.name}</b><small>${mb(packageBytes(manifest))}${manifest.packageFormat==='v4.1-slim'?' · 瘦身包':''}${hasUpdate?` · 已保留 ${current.version}`:''}${s?.state==='paused'?' · 可繼續':s?.state==='failed'?' · 需要修復':''}</small></div><div class=\"package-actions\"><button class=\"package-preview\">預覽</button><button class=\"package-download\">${actionLabel}</button>${!ready&&['paused','failed'].includes(s?.state)?'<button class=\"package-cancel\">取消</button>':''}</div>`;"
+          if old not in s: raise SystemExit('package row pattern missing')
+          s=s.replace(old,new,1)
+          s=s.replace("const button=row.querySelector('button');button.disabled=busy||ready;button.onclick=()=>confirmDownload([manifest],false);",
+                      "const preview=row.querySelector('.package-preview');preview.disabled=busy;preview.onclick=()=>ctx.previewBounds?.(manifest.bounds,manifest.name);const button=row.querySelector('.package-download');button.disabled=busy||ready;button.onclick=()=>confirmDownload([manifest],false);",1)
+          s=s.replace("$('downloadSouthAustralia').disabled=busy||prod.length!==7||full;",
+                      "$('downloadSouthAustralia').disabled=busy||prod.length!==7||full;$('previewSouthAustralia').disabled=busy||!prod.length;",1)
+          s=s.replace("$('downloadSouthAustralia').onclick=()=>confirmDownload(production(),true);",
+                      "$('previewSouthAustralia').onclick=()=>{const items=production();if(!items.length)return;const b={west:Math.min(...items.map(x=>x.bounds[0])),south:Math.min(...items.map(x=>x.bounds[1])),east:Math.max(...items.map(x=>x.bounds[2])),north:Math.max(...items.map(x=>x.bounds[3]))};ctx.previewBounds?.(b,'南澳大利亞州 · 全部離線地圖範圍');};\n  $('downloadSouthAustralia').onclick=()=>confirmDownload(production(),true);",1)
+          p.write_text(s)
+
+          # unified-ui.mjs: add Preview to every park row and bump fallback version.
+          p=Path('unified-ui.mjs'); s=p.read_text()
+          s=s.replace("const APP_VERSION_FALLBACK='v4.1.9';","const APP_VERSION_FALLBACK='v4.1.10';",1)
+          if "let previewOfflineBounds" not in s:
+              s=s.replace("const $ = id => document.getElementById(id);","const $ = id => document.getElementById(id);\nlet previewOfflineBounds=(bounds,name)=>{};",1)
+          marker="const state=row.querySelector('.region-state'),meta=[...row.children].find(el=>el.tagName==='SPAN'&&!el.classList.contains('region-state'));"
+          inject=marker+"\n  let preview=row.querySelector('.region-preview');if(!preview){preview=document.createElement('button');preview.className='region-preview';preview.textContent='預覽';preview.type='button';action.before(preview);}preview.onclick=event=>{event.preventDefault();event.stopImmediatePropagation();previewOfflineBounds(region.bounds,region.name);};"
+          if marker not in s: raise SystemExit('park row marker missing')
+          s=s.replace(marker,inject,1)
+          s=s.replace("export function setupUnifiedUI(ctx) {\n applyVisibleVersion(APP_VERSION_FALLBACK);",
+                      "export function setupUnifiedUI(ctx) {\n previewOfflineBounds=ctx.previewBounds||previewOfflineBounds;\n applyVisibleVersion(APP_VERSION_FALLBACK);",1)
+          p.write_text(s)
+
+          # unified-ui.css: preview frame + compact preview buttons.
+          p=Path('unified-ui.css'); s=p.read_text()
+          s += r'''
+
+/* v4.1.10 offline package / park bounds preview */
+.package-title-actions{display:flex;gap:8px;align-items:center}.package-preview,.region-preview{border:1px solid var(--border)!important;background:#fff!important;color:var(--ink)!important;min-height:38px!important;padding:7px 11px!important;font-size:12px!important}.package-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.region-preview{grid-column:3;grid-row:1/3}.region-row>button:not(.region-preview){grid-column:4;grid-row:1/3}
+.preview-bounds-frame{position:absolute;z-index:8;border:3px solid #1b7650;border-radius:12px;background:rgba(184,238,146,.10);box-shadow:0 0 0 9999px rgba(25,63,50,.06);pointer-events:none}.preview-bounds-frame>span{position:absolute;left:8px;top:8px;max-width:calc(100% - 16px);padding:6px 9px;border-radius:9px;background:rgba(25,63,50,.92);color:#fff;font-size:11px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.preview-bounds-frame>button{position:absolute;right:8px;bottom:8px;pointer-events:auto;border:0;background:#fff;color:#193f32;min-height:36px;padding:7px 10px;font-size:11px;box-shadow:0 3px 12px rgba(25,63,50,.18)}
+@media(max-width:600px){.package-title-actions{width:100%;justify-content:flex-end}.package-title{flex-wrap:wrap}.region-row{grid-template-columns:34px minmax(0,1fr) auto auto}.region-preview{grid-column:3}.region-row>button:not(.region-preview){grid-column:4}.preview-bounds-frame>span{font-size:10px}}
+'''
+          p.write_text(s)
+
+          # service worker version bump.
+          p=Path('sw.js'); s=p.read_text().replace('"v4.1.9"','"v4.1.10"',1); p.write_text(s)
+          PY
+          git config user.name 'trail-pocket-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add app.mjs package-manager.mjs unified-ui.mjs unified-ui.css sw.js
+          git commit -m 'v4.1.10: preview offline package and park bounds' || exit 0
+          git push
