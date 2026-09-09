@@ -1,0 +1,442 @@
+.map-quick-tools {
+  position: absolute;
+  z-index: 4;
+  top: 14px;
+  left: 14px;
+  right: 70px;
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  pointer-events: none;
+}
+
+.map-quick-tools button {
+  pointer-events: auto;
+  min-height: 46px;
+  background: rgba(255, 255, 252, 0.96);
+  border-color: rgba(220, 228, 214, 0.95);
+  box-shadow: 0 5px 18px rgba(24, 61, 49, 0.12);
+}
+
+.map-quick-tools button.primary {
+  color: white;
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.map-source-button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 194px;
+  padding: 7px 11px;
+  text-align: left;
+}
+
+.map-source-button > svg:first-child {
+  width: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.map-source-button span {
+  min-width: 0;
+  flex: 1;
+}
+
+.map-source-button b,
+.map-source-button small {
+  display: block;
+}
+
+.map-source-button b {
+  font-size: 12px;
+}
+
+.map-source-button small {
+  max-width: 145px;
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-source-button .chevron {
+  width: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.source-sheet {
+  padding: 10px 22px 22px;
+}
+
+.sheet-handle {
+  width: 42px;
+  height: 5px;
+  margin: 1px auto 14px;
+  border-radius: 5px;
+  background: #c9cec7;
+}
+
+.source-head,
+.toggle-row,
+.opacity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.source-head h2,
+.source-head p {
+  margin: 2px 0;
+}
+
+.source-head button {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #eef1ea;
+  font-size: 25px;
+}
+
+.source-options {
+  margin: 17px 0;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.source-row {
+  display: grid;
+  grid-template-columns: auto 42px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 13px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.source-row:last-child {
+  border-bottom: 0;
+}
+
+.source-row:has(input:checked) {
+  background: #edf5e8;
+}
+
+.source-row.disabled {
+  opacity: 0.48;
+  cursor: default;
+}
+
+.source-row input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--ink);
+}
+
+.source-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-content: center;
+  border-radius: 11px;
+  background: white;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.source-row b,
+.source-row small,
+.toggle-row b,
+.toggle-row small {
+  display: block;
+}
+
+.source-row small,
+.toggle-row small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.geo-choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.geo-choice select {
+  margin: 0;
+}
+
+.overlay-control {
+  padding: 14px;
+  border-radius: 15px;
+  background: #f3f5ef;
+}
+
+.toggle-row {
+  margin: 0;
+  color: var(--ink);
+}
+
+.toggle-row input {
+  width: 44px;
+  height: 24px;
+  accent-color: var(--ink);
+}
+
+.opacity-row {
+  align-items: stretch;
+  flex-direction: column;
+  margin: 14px 0 0;
+  color: var(--ink);
+}
+
+.opacity-row input {
+  padding: 0;
+  accent-color: var(--ink);
+}
+
+.source-coverage {
+  min-height: 42px;
+  margin: 13px 2px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #e8f0e1;
+  color: #315944;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@media (max-width: 600px) {
+  body:has(#mapView:not(.hide)) > header {
+    display: none;
+  }
+
+  body:has(#mapView:not(.hide)) > main {
+    padding: 0 0 96px;
+    min-height: 100dvh;
+  }
+
+  #mapView {
+    position: relative;
+    min-height: calc(100dvh - 94px);
+    overflow: hidden;
+  }
+
+  #mapView .map-head {
+    position: absolute;
+    top: calc(5px + env(safe-area-inset-top));
+    right: 12px;
+    left: 12px;
+    z-index: 7;
+    min-height: 48px;
+    margin: 0;
+    padding: 6px;
+    border-radius: 20px;
+    background: rgba(252, 253, 248, 0.91);
+    box-shadow: 0 5px 24px rgba(16, 39, 30, .12);
+    backdrop-filter: blur(15px);
+  }
+
+  #mapView .map-head h2 {
+    font-size: 17px;
+  }
+
+  #mapView .map-head .icon {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 15px;
+    background: rgba(255,255,255,.72);
+  }
+
+  #mapView > .explore-tools,
+  #mapView > #exploreStatus,
+  #mapView > #retryTiles {
+    display: none !important;
+  }
+
+  #mapView .trail-tools {
+    display: none;
+  }
+
+  #mapView .map-wrap {
+    height: calc(100dvh - 94px);
+    min-height: 560px;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .map-quick-tools {
+    top: calc(58px + env(safe-area-inset-top));
+    left: 14px;
+    right: 72px;
+    gap: 6px;
+  }
+
+  .map-quick-tools > button:not(.map-source-button) {
+    min-width: 42px;
+    padding: 6px 8px;
+    font-size: 0;
+  }
+
+  #jumpPlace::after {
+    content: "搜尋";
+    font-size: 11px;
+  }
+
+  #selectArea::after {
+    content: "下載";
+    font-size: 11px;
+  }
+
+  .map-source-button {
+    min-width: 0;
+    flex: 1;
+    min-height: 42px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .map-source-button small {
+    max-width: 115px;
+  }
+
+  #mapView .map-badge {
+    top: calc(106px + env(safe-area-inset-top));
+    left: 12px;
+    max-width: calc(100% - 88px);
+  }
+
+  #mapView .map-buttons {
+    top: calc(106px + env(safe-area-inset-top));
+  }
+
+  #mapView .map-buttons #zoomIn,
+  #mapView .map-buttons #zoomOut,
+  #mapView .map-buttons #fit {
+    display: none;
+  }
+
+  #mapView .activity-panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    left: 0;
+    z-index: 8;
+    margin: 0;
+    padding: 13px 16px 12px;
+    border-width: 1px 0 0;
+    border-radius: 32px 32px 0 0;
+    box-shadow: 0 -10px 35px rgba(16, 39, 30, .14);
+  }
+
+  #mapView .activity-panel:not(.is-expanded) {
+    max-height: 142px;
+  }
+
+  #mapView .activity-panel:not(.is-expanded):not(.has-activity) {
+    right: auto;
+    bottom: calc(66px + env(safe-area-inset-bottom));
+    left: 50%;
+    width: min(190px, calc(100% - 32px));
+    max-height: 50px;
+    padding: 0;
+    transform: translateX(-50%);
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  #mapView .activity-panel:not(.is-expanded):not(.has-activity) .activity-sheet-toggle {
+    display: none;
+  }
+
+  #mapView .activity-panel:not(.is-expanded):not(.has-activity) #startActivity {
+    min-height: 50px;
+    margin: 0;
+    box-shadow: 0 7px 24px rgba(16,39,30,.2);
+  }
+
+  #mapView .activity-panel.has-activity:not(.is-expanded) {
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    left: 12px;
+    max-height: 68px;
+  }
+
+  #mapView:has(.activity-panel.has-activity:not(.is-expanded)) .map-head,
+  #mapView:has(.activity-panel.has-activity:not(.is-expanded)) .map-quick-tools,
+  #mapView:has(.activity-panel.has-activity:not(.is-expanded)) .map-badge {
+    display: none;
+  }
+
+  #mapView:has(.activity-panel.has-activity:not(.is-expanded)),
+  #mapView:has(.activity-panel.has-activity:not(.is-expanded)) .map-wrap {
+    min-height: 100dvh;
+    height: 100dvh;
+  }
+
+  #mapView:has(.activity-panel.has-activity:not(.is-expanded)) .map-buttons {
+    top: calc(10px + env(safe-area-inset-top));
+  }
+
+  body:has(#mapView:not(.hide) .activity-panel.has-activity:not(.is-expanded)) nav {
+    display: none;
+  }
+
+  body:has(#mapView:not(.hide) .activity-panel.has-activity:not(.is-expanded)) > main {
+    height: 100dvh;
+    min-height: 100dvh;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+
+  #mapView .activity-panel.is-expanded {
+    padding: 15px 18px 16px;
+  }
+
+  .source-sheet {
+    width: 100%;
+    max-width: none;
+    max-height: min(88dvh, 760px);
+    margin: auto 0 0;
+    border-radius: 28px 28px 0 0;
+    padding-right: 18px;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    padding-left: 18px;
+  }
+
+  .source-sheet[open] {
+    animation: source-up 0.2s ease-out;
+  }
+}
+
+@keyframes source-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,61 @@
+.geopdf-library {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 0 0 24px;
+}
+.geopdf-library > .row {
+  align-items: center;
+  justify-content: space-between;
+}
+.geopdf-library h2 {
+  margin: 0;
+}
+.geopdf-library p {
+  font-size: 12px;
+}
+.geopdf-card {
+  margin-top: 12px;
+}
+.geopdf-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  margin: -5px 0 12px;
+  background: #e5eddd;
+  border-radius: 14px;
+}
+.geopdf-bar span {
+  font-size: 12px;
+  font-weight: 700;
+}
+.geopdf-mode .explore-tools,
+.geopdf-mode #exploreStatus,
+.geopdf-mode #retryTiles,
+.geopdf-mode .trail-tools,
+.geopdf-mode .attribution,
+.geopdf-mode #mapOptions {
+  display: none !important;
+}
+.geopdf-mode .map-wrap {
+  height: calc(100dvh - 390px);
+}
+@media (max-width: 600px) {
+  .geopdf-library > .row {
+    align-items: flex-start;
+  }
+  .geopdf-library #importGeoPdf {
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .geopdf-bar {
+    font-size: 11px;
+  }
+  .geopdf-mode .map-wrap {
+    height: calc(100dvh - 365px);
+    min-height: 320px;
+  }
+}

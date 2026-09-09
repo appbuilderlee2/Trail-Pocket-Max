@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {searchPackageEntries} from '../package-search.mjs';
+const sources=[{name:'Mount Lofty',entries:[{n:'Devils Nose Track',e:'',z:'',p:[138.82,-34.68],t:'place'},{n:'停車場',e:'',z:'',p:[138.821,-34.681],t:'parking'},{n:'Mount Lofty Summit',e:'',z:'',p:[138.71,-34.97],t:'peak'}]}];
+test('v4 search supports category aliases, typo tolerance and distance ordering',()=>{assert.equal(searchPackageEntries(sources,'泊車',[138.82,-34.68])[0].kind,'停車場');assert.equal(searchPackageEntries(sources,'Devil Nose')[0].name,'Devils Nose Track');assert.equal(searchPackageEntries(sources,'summit')[0].kind,'山峰');});

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#193f32" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Trail Pocket" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./assets/icon-192.png" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./adventure.css" />
+    <link rel="stylesheet" href="./explore.css" />
+    <link rel="stylesheet" href="./activity.css" />
+    <link rel="stylesheet" href="./geopdf.css" />
+    <link rel="stylesheet" href="./map-source.css" />
+    <link rel="stylesheet" href="./vendor/maplibre-gl.css" />
+    <link rel="stylesheet" href="./vector-map.css" />
+    <link rel="stylesheet" href="./package-manager.css" />
+    <link rel="stylesheet" href="./package-manager-controls.css" />
+    <title>Trail Pocket · 離線行山地圖</title>
+    <link rel="stylesheet" href="./hiking-ui.css">
+  <link rel="stylesheet" href="./unified-ui.css">
+  </head>
+  <body>
+    <header>
+      <div><b>TRAIL POCKET</b><small>帶住路線，離線出發</small></div>
+      <div class="header-status">
+        <span class="version">v4.0.0-beta.7</span
+        ><span id="network" class="chip">檢查連線</span>
+      </div>
+    </header>
+    <div id="banner" class="banner hide" role="status"></div>
+    <div id="updates" class="banner hide">
+      有新版本可以使用。<button id="update">更新並重新開啟</button>
+    </div>
+    <main>
+      <section id="routesView" class="view">
+        <div class="heading">
+          <div>
+            <div class="eyebrow">YOUR TRAILS</div>
+            <h1>我的路線</h1>
+            <p>匯入 GPX／KML，揀好底圖再出發。</p>
+          </div>
+          <button id="import" class="primary">＋ 匯入路線</button>
+        </div>
+        <input id="files" type="file" accept=".gpx,.kml" multiple hidden />
+        <div class="saved-controls"><input id="routeSearch" type="search" placeholder="搜尋已儲存路線" aria-label="搜尋已儲存路線"><select id="routeSort" aria-label="路線排序"><option value="name">名稱排序</option><option value="distance">距離短至長</option><option value="offline">已下載優先</option></select></div><p id="routeSearchEmpty" class="muted hide">找不到符合的路線。</p>
+        <div id="routeList" class="cards"></div>
+        <div id="empty" class="empty">
+          <div class="empty-icon">↟</div>
+          <h2>下一條路，由你選擇</h2>
+          <p>
+            每條路線分開儲存，可以隨時切換。<br />GPX／KML 只喺呢部裝置處理。
+          </p>
+          <button id="firstImport" class="primary">匯入第一條路線</button
+          ><button id="demo" class="secondary">試用 Devils Nose 示範</button
+          ><small>示範附離線底圖，毋須向地圖服務下載。</small>
+        </div>
+      </section>
+      <section id="mapView" class="view hide">
+        <div class="map-head">
+          <button id="back" class="icon" aria-label="返回我的路線">←</button>
+          <div>
+            <h2 id="mapTitle">選擇一條路線</h2>
+            <small id="mapMeta"></small>
+          </div>
+          <button id="mapOptions" class="icon" aria-label="路線資料">ⓘ</button>
+        </div>
+        <div class="map-wrap"><div id="vectorMap" class="vector-map hide" aria-hidden="true"></div><div id="mapPositionStatus" class="position-status">GPS 未開啟 · 方向未確認</div>
+          <canvas id="map" aria-label="路線及離線底圖"></canvas>
+          <div id="mapBadge" class="map-badge"></div>
+          <div class="map-buttons">
+            <span class="north">▲<br />N</span
+            ><button id="zoomIn" aria-label="放大">＋</button
+            ><button id="zoomOut" aria-label="縮小">−</button
+            ><button id="fit" aria-label="顯示整條路線">⌖</button
+            ><button id="follow" aria-label="置中目前位置">◎</button>
+          </div>
+          <div class="attribution">
+            ©
+            <a
+              href="https://www.openstreetmap.org/copyright"
+              target="_blank"
+              rel="noopener"
+              >OpenStreetMap</a
+            >
+            ·
+            <a
+              href="https://opendatacommons.org/licenses/odbl/1-0/"
+              target="_blank"
+              rel="noopener"
+              >ODbL</a
+            >
+            · 高程
+            <a
+              href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md"
+              target="_blank"
+              rel="noopener"
+              >Mapzen／Geoscience Australia</a
+            >
+          </div>
+        </div>
+      </section>
+      <section id="offlineView" class="view hide">
+        <div class="heading">
+          <div>
+            <div class="eyebrow">READY BEFORE YOU GO</div>
+            <h1>離線下載</h1>
+            <p>下載 OSM 範圍，或匯入官方 GeoPDF。</p>
+          </div>
+        </div>
+        <div id="downloadList" class="download-list"></div>
+        <p id="downloadEmpty" class="muted hide">
+          先到「我的路線」匯入 GPX／KML。
+        </p>
+        <p class="fineprint">
+          快速離線包包含 OSM
+          道路等級、步道、水域、土地用途、建築物、山峰、廁所、停車場、地名、本機搜尋索引及步道路網；可在設定選擇加入約 20 m 等高線。多張地圖會在畫面自動拼合使用。只覆蓋所選範圍，並非
+          OSM
+          全球資料庫；唔包含衛星影像、即時封路或現場危險。下載時矩形範圍會傳送至公共
+          Overpass 及開放高程服務，GPX／KML 本身留喺手機。
+        </p>
+      </section>
+      <section id="settingsView" class="view hide">
+        <div class="eyebrow">TRAIL POCKET · V4.0.0 BETA 1</div>
+        <h1>設定</h1>
+        <p class="settings-intro">定位、地圖、安全提醒、離線檢查及使用說明集中在這裏。</p>
+
+        <section class="settings-card">
+          <div class="settings-card-head"><div><h2>GPS 與位置</h2><p>在這裏開啟定位，地圖及活動會共用同一個 GPS。</p></div></div>
+          <div class="gps-bar">
+            <button id="gps" class="primary">◎ 開始定位</button>
+            <div id="gpsStatus" role="status">GPS 位置只在裝置處理；在線底圖會向地圖服務請求畫面附近圖磚。熄屏後可能停止更新。</div>
+          </div>
+          <div class="emergency-card">
+            <div><small>緊急位置（只在本機顯示）</small><strong id="emergencyCoords">等待 GPS 定位</strong><span id="emergencyMeta">不會自動聯絡救援服務</span></div>
+            <button id="copyPosition" disabled>複製座標</button>
+          </div>
+        </section>
+
+        <section class="settings-card">
+          <h2>方向與指南針</h2>
+          <button id="compassToggle">開啟手機指南針</button>
+          <p id="compassStatus" role="status">行走時顯示 GPS 行進方向；停留時可開啟手機指南針。</p>
+          <p class="fineprint">藍色扇形只表示方向，並非推薦路線。指南針可能受磁石、車輛及電子設備影響；未有可靠資料時不顯示。地圖維持北向上，GeoPDF 按原圖方向校正。</p>
+        </section>
+        <section class="settings-card">
+          <h2>地圖與導航</h2>
+          <div class="settings-list">
+            <button id="settingsMapSource"><span>▱</span><b>地圖來源及 GeoPDF</b><small>線上、離線優先、GeoPDF 重疊及透明度</small><i>›</i></button>
+            <button id="settingsLayers"><span>▧</span><b>離線地圖圖層</b><small>道路、建築物、設施、地名、等高線及坡度</small><i>›</i></button>
+            <button id="settingsAlerts"><span>♧</span><b>偏離路線提醒</b><small>提醒距離、聲音及前景監察</small><i>›</i></button>
+          </div>
+        </section>
+
+        <section class="settings-card">
+          <h2>活動</h2>
+          <label class="settings-switch"><span><b>活動時保持螢幕亮著</b><small>減少前景 GPS 被熄屏中斷，但會增加耗電。</small></span><input id="keepAwake" type="checkbox" checked></label>
+          <button id="settingsActivityHistory" class="settings-wide-button">查看活動紀錄</button>
+        </section>
+
+        <section class="settings-card settings-storage">
+          <h2>離線與本機資料</h2>
+          <label class="settings-switch"><span><b>下載時加入 20 m 等高線</b><small>關閉可大幅縮短下載時間；OSM 圖層、離線搜尋及步道路網仍會完整保留。</small></span><input id="downloadContours" type="checkbox"></label>
+          <label class="settings-switch"><span><b>備份時包括 GeoPDF</b><small>個人路線、活動及標記一定會備份；官方南澳地圖包只保存重新下載清單，不會塞入 JSON。</small></span><input id="backupGeoPdfs" type="checkbox" checked></label>
+          <div class="storage-card">
+            <div><span id="shellIcon">○</span><strong id="shellStatus">檢查 App 離線狀態…</strong><small id="storageInfo"></small></div>
+            <div class="storage-actions">
+              <button id="audit" class="audit-button">離線自檢</button><button id="persist">保護本機儲存</button><button id="backupAll">備份全部資料</button><button id="restoreAll">還原備份</button>
+              <input id="backupFile" type="file" accept=".json,.trailpocket,application/json" hidden />
+            </div>
+          </div>
+        </section>
+
+        <h2 class="settings-guide-title">使用及安全說明</h2>
+        <ol class="steps">
+          <li>
+            <b>匯入官方 GeoPDF</b>
+            <p>
+              到「離線下載」按「匯入 GeoPDF」。App 會讀取 PDF
+              內置地理控制點並保存清晰離線圖像；開啟後按「開始定位」即可在圖幅內顯示
+              GPS 藍點、精度圈及活動軌跡。普通 PDF 不會猜測位置。
+            </p>
+          </li>
+          <li>
+            <b>匯入路線</b>
+            <p>
+              下載 Walking SA 或其他來源嘅
+              GPX／KML，再加入「我的路線」。支援一次選多個檔案。KMZ 請先解壓成
+              KML。
+            </p>
+          </li>
+          <li>
+            <b>選擇離線範圍</b>
+            <p>
+              開啟地圖後按「搜尋／目前位置」，搜尋地名、使用 GPS
+              或自行拖動地圖再框選。亦可按路線下載周邊 500 m、1 km、2 km 或 5
+              km。大型範圍會自動分區下載，完成後仍作為一張地圖使用。
+            </p>
+          </li>
+          <li>
+            <b>開始活動</b>
+            <p>
+              可先選路線再開始，或自由行山。記錄時間、距離、GPS
+              爬升、剩餘估算、平均配速及速度。「保持螢幕亮著」可減少前景定位被熄屏中斷，但較耗電且不等於背景定位。
+            </p>
+          </li>
+          <li>
+            <b>出發前測試</b>
+            <p>
+              iPhone 用 Safari 開啟已部署 HTTPS 網址 → 分享 →
+              加入主畫面。在主畫面版本內下載地圖，按「保護本機儲存」及「備份全部資料」，再開飛行模式重開，確認底圖、等高線及路線均可見。
+            </p>
+          </li>
+          <li>
+            <b>途中查看位置</b>
+            <p>
+              開啟路線後按「開始定位」，允許定位。「緊急位置」會顯示可複製經緯度、精度及更新時間；不會自動聯絡救援服務。灰點代表舊位置。
+            </p>
+          </li>
+        </ol>
+        <div class="notice">
+          <b>手機儲存要留意</b>
+          <p>
+            路線、活動、底圖及等高線只保存在目前瀏覽器／PWA。寫入前會檢查剩餘空間；清除網站資料、私密瀏覽或裝置儲存不足仍可能令資料消失。「保護本機儲存」亦唔代表永不被刪除。完整
+            JSON 備份可合併還原，但檔案可能很大。
+          </p>
+        </div>
+        <p class="fineprint">
+          20 m 等高線由 Mapzen Terrain Tiles／AWS Open Data
+          高程格網在裝置計算；南澳資料需標示 © Commonwealth of Australia
+          (Geoscience Australia)
+          2017。大範圍會自動降低高程格網細緻度。線條只作地形參考，不能代替正式地形圖、現場路牌或安全判斷。此版不提供背景定位保證、即時封路、衛星影像或逐彎導航。
+        </p>
+        <div class="notice">
+          <b>大型離線地圖</b>
+          <p>
+            每張上限 500 km²／128 MB。系統會拆成約 100 km²
+            分區逐段下載，失敗時轉用備用服務；全部完成並檢查空間後才取代舊地圖。下載期間請保持頁面開啟。支援全球緯度
+            ±85°，暫未支援跨國際換日線。
+          </p>
+        </div>
+      </section>
+    </main>
+    <nav aria-label="主要頁面">
+      <button data-view="map" data-tab="explore" class="active"><span>⌖</span>探索</button
+      ><button data-view="routes" data-tab="saved"><span>♡</span>已儲存</button
+      ><button data-view="settings" data-tab="settings"><span>⚙</span>設定</button>
+    </nav>
+    <dialog id="details">
+      <h2 id="detailsTitle"></h2>
+      <div id="detailsContent"></div>
+      <button id="closeDetails" class="primary">關閉</button>
+    </dialog>
+    <dialog id="confirm">
+      <h2 id="confirmTitle"></h2>
+      <p id="confirmText"></p>
+      <div class="row">
+        <button id="cancelConfirm">取消</button
+        ><button id="acceptConfirm" class="danger">刪除</button>
+      </div>
+    </dialog>
+    <div id="toast" class="toast hide" role="status"></div>
+    <noscript>呢個 PWA 需要 JavaScript。請用支援嘅瀏覽器開啟。</noscript>
+    <script>
+      if (location.protocol === "file:") {
+        document.getElementById("banner").classList.remove("hide");
+        document.getElementById("banner").textContent =
+          "呢個係 PWA 程式套件。請先部署到 HTTPS 網址，再用 Safari 加入主畫面；直接開啟本機檔案唔能夠安裝或儲存離線地圖。";
+      }
+    </script>
+    <script src="./vendor/pmtiles.js"></script>
+    <script type="module" src="./app.mjs"></script>
+  </body>
+</html>

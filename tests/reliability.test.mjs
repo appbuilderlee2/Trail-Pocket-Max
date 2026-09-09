@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createIntegrityManifest,verifyOfflineRecord,coverageStatus,routeCoverage,gpsQuality,gpsAltitude} from '../reliability-core.mjs';
+const record={packageVersion:3,bounds:{west:138,south:-35,east:138.02,north:-34.98},data:{elements:[{id:1}]},contours:[],searchIndex:[["toilet","Toilet",138.01,-34.99,"洗手間"]],routingGraph:{nodes:[[1,2]],edges:[]},parts:1};
+test('offline integrity detects truncated indexes after storage',()=>{const saved=structuredClone(record);saved.integrity=createIntegrityManifest(saved);assert.equal(verifyOfflineRecord(saved).ok,true);saved.searchIndex=[];assert.equal(verifyOfflineRecord(saved).ok,false);});
+test('verified fast packages may omit optional contour data',()=>{const saved={...structuredClone(record),terrain:{source:'快速離線包',optional:true},contours:[]};saved.integrity=createIntegrityManifest(saved);assert.equal(verifyOfflineRecord(saved).ok,true);});
+test('coverage distinguishes safe interior edge and outside',()=>{assert.equal(coverageStatus([138.01,-34.99],[record]).state,'inside');assert.equal(coverageStatus([138.0001,-34.99],[record]).state,'edge');assert.equal(coverageStatus([139,-34.99],[record]).state,'outside');});
+test('route coverage requires every recorded route point to be downloaded',()=>{assert.equal(routeCoverage([[[138.01,-34.99],[138.019,-34.981]]],[record]).covered,true);assert.deepEqual(routeCoverage([[[138.01,-34.99],[139,-34]]],[record]),{covered:false,missing:1,total:2});});
+test('GPS quality reports waiting stale poor and good fixes',()=>{const now=100000,fix=(age,accuracy)=>({timestamp:now-age,coords:{accuracy}});assert.equal(gpsQuality(null,true,now).state,'waiting');assert.equal(gpsQuality(fix(25000,5),true,now).state,'stale');assert.equal(gpsQuality(fix(0,70),true,now).state,'poor');assert.equal(gpsQuality(fix(0,8),true,now).state,'good');});
+test('GPS altitude is shown only with usable vertical accuracy',()=>{assert.deepEqual(gpsAltitude({coords:{altitude:123.6,altitudeAccuracy:8.4}}),{metres:124,accuracy:8});assert.equal(gpsAltitude({coords:{altitude:123,altitudeAccuracy:80}}),null);assert.equal(gpsAltitude({coords:{altitude:null,altitudeAccuracy:null}}),null);});
+test('MapLibre 6 ESM initialization does not call removed supported helper',async()=>{const source=await readFile(new URL('../vector-map.mjs',import.meta.url),'utf8');assert.match(source,/maplibregl\.Map/);assert.doesNotMatch(source,/maplibregl\.supported\s*\(/);});
+test('map source cache key changes when navigation enters the map view',async()=>{const source=await readFile(new URL('../explore.mjs',import.meta.url),'utf8');assert.match(source,/view:\$\{ctx\.getView\(\)\}/);});

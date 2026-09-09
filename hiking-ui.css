@@ -1,0 +1,62 @@
+/* Trail Pocket: map-first controls, shared by all geographic sources. */
+.position-status{position:absolute;left:14px;bottom:60px;z-index:5;padding:7px 10px;border-radius:12px;background:#ffffffeb;color:#193f32;font-size:11px;box-shadow:0 2px 12px #193f3212;pointer-events:none;max-width:calc(100% - 85px)}
+.position-status.position-warning{background:#fff0d8;color:#704412}
+#compassToggle{margin:12px 0 8px;min-height:44px}
+#routesView .cards{display:block}
+#routesView .route-card{display:grid;grid-template-columns:106px minmax(0,1fr);gap:16px;border:0;border-bottom:1px solid #e6eae4;border-radius:0;box-shadow:none;padding:20px 0;background:transparent}
+#routesView .mini{height:106px;border-radius:16px;align-self:start;overflow:hidden}
+#routesView .mini .chip{display:none}
+#routesView .route-body{padding:0}
+#routesView .route-body h2{font-size:19px;line-height:1.35;margin:0 0 6px}
+#routesView .card-actions{gap:8px;margin-top:12px;flex-wrap:wrap}
+#routesView .card-actions button{min-height:42px;padding:8px 12px}
+#routesView .route-meta{margin-top:7px;gap:6px;flex-wrap:wrap}
+@media(max-width:600px){
+  body{background:#fff}
+  #routesView .eyebrow{display:none}
+  #routesView h1{font-size:32px}
+  #routesView .route-card{grid-template-columns:82px minmax(0,1fr);gap:12px}
+  #routesView .mini{height:82px;border-radius:12px}
+  #routesView .route-body h2{font-size:17px}
+  #routesView .card-actions button{font-size:12px}
+  #mapView .map-head{position:absolute;top:calc(10px + env(safe-area-inset-top));left:12px;right:72px;z-index:6;margin:0;padding:0;background:none;box-shadow:none;border:0}
+  #mapView .map-head h2{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#ffffffed;border-radius:12px;padding:10px 12px;margin:0}
+  #mapView .map-head small,#mapView .map-head #mapOptions{display:none}
+  #mapView .map-head .icon{width:42px;height:42px;background:#fff;border-radius:50%;box-shadow:0 3px 14px #193f3218}
+  #mapView .map-quick-tools{display:flex;position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;left:auto;width:44px;padding:0;gap:0;background:none;box-shadow:none}
+  #mapView .map-source-button{height:44px;min-height:44px;width:44px;min-width:44px;border-radius:50%;padding:10px;box-shadow:0 3px 14px #193f3218}
+  #mapView .map-source-button>span,#mapView .map-source-button>.chevron{display:none}
+  #mapView #jumpPlace,#mapView #selectArea{display:none}
+  #mapView .map-badge{display:none}
+  #mapView .map-buttons{top:calc(66px + env(safe-area-inset-top));right:12px;gap:10px}
+  #mapView .map-buttons button,#mapView .north{width:44px;height:44px;border-radius:50%}
+  #mapView .position-status{top:calc(62px + env(safe-area-inset-top));bottom:auto;left:12px;max-width:calc(100% - 82px);font-size:10px;padding:6px 9px}
+  #mapView .activity-panel:not(.is-expanded){position:fixed;left:12px;right:12px;bottom:max(var(--bottom-ui-offset,112px),calc(108px + env(safe-area-inset-bottom)));z-index:12;width:auto;max-width:none;margin:0;transform:none}
+  #mapView .activity-panel:not(.is-expanded):not(.has-activity){display:grid;grid-template-columns:minmax(0,1fr) 116px;align-items:center;gap:10px;max-height:88px;min-height:82px;padding:12px 14px;border:1px solid #e8ede6;border-radius:26px;background:#fff;box-shadow:0 6px 26px #193f3220}
+  #mapView .activity-panel:not(.is-expanded):not(.has-activity) .activity-stats{display:grid!important;grid-template-columns:1fr 1fr;gap:4px;margin:0}
+  #mapView .activity-panel:not(.is-expanded):not(.has-activity) .activity-stats>div{padding:0 5px}
+  #mapView .activity-panel:not(.is-expanded):not(.has-activity) .activity-stats strong{font-size:clamp(21px,6.4vw,30px);letter-spacing:-1px}
+  #mapView .activity-panel:not(.is-expanded):not(.has-activity) .activity-stats span{font-size:9px}
+  #mapView .activity-panel:not(.is-expanded):not(.has-activity) #startActivity{width:116px;min-height:48px;font-size:14px;margin:0;padding:10px;border-radius:28px;background:#a6ed79;color:#173022;box-shadow:none}
+  #mapView .activity-panel.is-expanded{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:30;width:auto;max-width:none;margin:0;transform:none;max-height:calc(100dvh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain}
+  #mapView:has(.activity-panel.is-expanded) .map-tool-menu{display:none!important}
+  body:has(#mapView:not(.hide) .activity-panel.is-expanded)>nav{opacity:0;visibility:hidden;pointer-events:none}
+  #mapView:has(.activity-panel.has-activity:not(.is-expanded)) .map-buttons{top:calc(66px + env(safe-area-inset-top))}
+  #mapView:has(.activity-panel.has-activity:not(.is-expanded)) .map-quick-tools{display:flex}
+  #mapView:has(.activity-panel.has-activity:not(.is-expanded)) .position-status{top:calc(12px + env(safe-area-inset-top))}
+  nav{padding-top:5px;padding-bottom:calc(5px + env(safe-area-inset-bottom));background:#fffffff5}
+  nav button{min-height:46px;font-size:10px;padding:3px 8px}
+  .settings-card{padding:16px;border-radius:18px}
+  dialog{max-height:calc(100dvh - 48px)}
+}
+@media(prefers-reduced-motion:reduce){.activity-panel,.source-sheet[open]{transition:none!important;animation:none!important}}
+@media(max-width:600px){
+ body:has(#mapView:not(.hide))>main{height:100dvh;min-height:100dvh;padding:0;overflow:hidden}
+ #mapView,#mapView .map-wrap{height:100dvh;min-height:100dvh}
+ .saved-controls{display:flex;gap:8px;margin:16px 0}
+ .saved-controls input{min-width:0;flex:1}
+}
+.saved-controls{display:flex;gap:10px;margin:20px 0}
+.saved-controls input,.saved-controls select{border:1px solid #dce3d9;border-radius:14px;padding:12px;color:#193f32;background:#fff;min-height:44px;font:inherit}
+.saved-controls input{flex:1;min-width:0}
+.saved-controls select{max-width:135px;font-size:13px}
