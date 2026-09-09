@@ -2,7 +2,8 @@ import { OFFLINE_REGIONS } from './offline-regions.mjs';
 import * as store from './storage.mjs';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION_FALLBACK='v4.1.9';
+let previewOfflineBounds=(bounds,name)=>{};
+const APP_VERSION_FALLBACK='v4.1.10';
 const paths = {
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
  saved:'<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
@@ -55,6 +56,7 @@ function syncParkRows(){
   if(!region||!action)continue;
   const installed=api.covering?.(region.bounds)||[],available=api.availableCovering?.(region.bounds)||[];
   const state=row.querySelector('.region-state'),meta=[...row.children].find(el=>el.tagName==='SPAN'&&!el.classList.contains('region-state'));
+  let preview=row.querySelector('.region-preview');if(!preview){preview=document.createElement('button');preview.className='region-preview';preview.textContent='預覽';preview.type='button';action.before(preview);}preview.onclick=event=>{event.preventDefault();event.stopImmediatePropagation();previewOfflineBounds(region.bounds,region.name);};
   if(installed.length){
    if(state){state.textContent='✓';state.classList.add('saved');}
    if(meta)meta.textContent=`已由 ${installed.map(x=>x.name).join(' + ')} 覆蓋`;
@@ -194,6 +196,7 @@ async function cleanupLegacyMaps(){
 }
 
 export function setupUnifiedUI(ctx) {
+ previewOfflineBounds=ctx.previewBounds||previewOfflineBounds;
  applyVisibleVersion(APP_VERSION_FALLBACK);
  const heading=document.createElement('section');heading.id='libraryHeader';heading.className='library-header hide';
  heading.innerHTML='<h1>我的</h1><div class="library-tabs" role="tablist" aria-label="我的分類"><button id="myRoutes" role="tab" aria-selected="true">路線</button><button id="myMaps" role="tab" aria-selected="false">離線地圖</button><button id="myActivities" role="tab" aria-selected="false">活動</button><button id="myMarkers" role="tab" aria-selected="false">標記</button></div>';

@@ -27,7 +27,7 @@ async function decodeJson(files,file,label){
 
 export function setupPackageManager(ctx){
   const root=document.createElement('section');root.className='package-library';
-  root.innerHTML='<div class="package-title"><div><span>V4.1 離線向量地圖</span><h2>南澳大利亞州</h2><p id="packageSummary">正在讀取地圖包目錄…</p></div><button id="downloadSouthAustralia" disabled>下載全部</button></div><div id="packageProgress" class="package-progress hide"><span></span><b></b><button id="pausePackage">暫停</button></div><div id="packageList" class="package-list"></div>';
+  root.innerHTML='<div class="package-title"><div><span>V4.1 離線向量地圖</span><h2>南澳大利亞州</h2><p id="packageSummary">正在讀取地圖包目錄…</p></div><div class="package-title-actions"><button id="previewSouthAustralia" disabled>預覽全部</button><button id="downloadSouthAustralia" disabled>下載全部</button></div></div><div id="packageProgress" class="package-progress hide"><span></span><b></b><button id="pausePackage">暫停</button></div><div id="packageList" class="package-list"></div>';
   document.querySelector('#offlineView .heading').after(root);
   const $=id=>document.getElementById(id),manifests=new Map();
   let db,catalog,files,installed=[],downloads=[],controller,busy=false,indexSource='saved';
@@ -49,13 +49,13 @@ export function setupPackageManager(ctx){
       const row=document.createElement('div'),s=state(manifest.id),current=installed.find(x=>x.id===manifest.id&&x.state==='ready'),ready=current?.version===manifest.version,hasUpdate=Boolean(current&&!ready);
       const actionLabel=ready?'已下載':s?.state==='paused'?'繼續':s?.state==='failed'?'修復':hasUpdate?'更新':'下載';
       row.className='package-row';
-      row.innerHTML=`<span class="package-state">${ready?'✓':hasUpdate?'↻':'↓'}</span><div><b>${manifest.name}</b><small>${mb(packageBytes(manifest))}${manifest.packageFormat==='v4.1-slim'?' · 瘦身包':''}${hasUpdate?` · 已保留 ${current.version}`:''}${s?.state==='paused'?' · 可繼續':s?.state==='failed'?' · 需要修復':''}</small></div><div class="package-actions"><button>${actionLabel}</button>${!ready&&['paused','failed'].includes(s?.state)?'<button class="package-cancel">取消</button>':''}</div>`;
-      const button=row.querySelector('button');button.disabled=busy||ready;button.onclick=()=>confirmDownload([manifest],false);
+      row.innerHTML=`<span class="package-state">${ready?'✓':hasUpdate?'↻':'↓'}</span><div><b>${manifest.name}</b><small>${mb(packageBytes(manifest))}${manifest.packageFormat==='v4.1-slim'?' · 瘦身包':''}${hasUpdate?` · 已保留 ${current.version}`:''}${s?.state==='paused'?' · 可繼續':s?.state==='failed'?' · 需要修復':''}</small></div><div class="package-actions"><button class="package-preview">預覽</button><button class="package-download">${actionLabel}</button>${!ready&&['paused','failed'].includes(s?.state)?'<button class="package-cancel">取消</button>':''}</div>`;
+      const preview=row.querySelector('.package-preview');preview.disabled=busy;preview.onclick=()=>ctx.previewBounds?.(manifest.bounds,manifest.name);const button=row.querySelector('.package-download');button.disabled=busy||ready;button.onclick=()=>confirmDownload([manifest],false);
       const cancel=row.querySelector('.package-cancel');if(cancel)cancel.onclick=()=>discard(manifest);
       $('packageList').append(row);
     }
     $('packageSummary').textContent=full?`南澳完整離線 · 7/7 已驗證`:prod.length===7?`${currentCount}/7 個地區已驗證 · 正式 production 目錄 · 下載後跨區自動拼合`:show.length?'測試／備用地圖包可用；正在等待正式南澳目錄':'未能取得地圖包目錄；已下載地圖仍可使用';
-    $('downloadSouthAustralia').disabled=busy||prod.length!==7||full;
+    $('downloadSouthAustralia').disabled=busy||prod.length!==7||full;$('previewSouthAustralia').disabled=busy||!prod.length;
     $('downloadSouthAustralia').textContent=full?'已完整下載':'下載全部';
     notify();
   }
@@ -92,6 +92,7 @@ export function setupPackageManager(ctx){
     return confirmDownload(matches,false);
   }
 
+  $('previewSouthAustralia').onclick=()=>{const items=production();if(!items.length)return;const b={west:Math.min(...items.map(x=>x.bounds[0])),south:Math.min(...items.map(x=>x.bounds[1])),east:Math.max(...items.map(x=>x.bounds[2])),north:Math.max(...items.map(x=>x.bounds[3]))};ctx.previewBounds?.(b,'南澳大利亞州 · 全部離線地圖範圍');};
   $('downloadSouthAustralia').onclick=()=>confirmDownload(production(),true);
   $('pausePackage').onclick=()=>controller?.abort();
 

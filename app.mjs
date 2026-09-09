@@ -129,6 +129,43 @@ function nav(name, tab = name === "routes" ? "saved" : name === "map" ? "explore
   explore.viewChanged();
   window.scrollTo({ top: 0 });
 }
+function previewOfflineBounds(rawBounds, name = "離線地圖範圍") {
+  const bounds = Array.isArray(rawBounds)
+    ? { west: rawBounds[0], south: rawBounds[1], east: rawBounds[2], north: rawBounds[3] }
+    : rawBounds;
+  if (!bounds || ![bounds.west,bounds.south,bounds.east,bounds.north].every(Number.isFinite)) {
+    toast("未能讀取呢個離線地圖範圍。");
+    return;
+  }
+  follow = false;
+  $("follow").classList.remove("selected");
+  nav("map");
+  requestAnimationFrame(() => {
+    map.resize();
+    map.fitBounds(bounds);
+    let frame = $("previewBoundsFrame");
+    if (!frame) {
+      frame = document.createElement("div");
+      frame.id = "previewBoundsFrame";
+      frame.className = "preview-bounds-frame";
+      frame.innerHTML = '<span id="previewBoundsLabel"></span><button id="closeBoundsPreview">返回離線下載</button>';
+      document.querySelector(".map-wrap")?.append(frame);
+      $("closeBoundsPreview").onclick = () => { frame.classList.add("hide"); nav("offline"); };
+    }
+    const a = map.screen(project([bounds.west, bounds.north]));
+    const z = map.screen(project([bounds.east, bounds.south]));
+    const left = Math.min(a[0], z[0]), top = Math.min(a[1], z[1]);
+    frame.style.left = `${left}px`;
+    frame.style.top = `${top}px`;
+    frame.style.width = `${Math.max(28, Math.abs(z[0]-a[0]))}px`;
+    frame.style.height = `${Math.max(28, Math.abs(z[1]-a[1]))}px`;
+    $("previewBoundsLabel").textContent = name;
+    frame.classList.remove("hide");
+    $("mapTitle").textContent = name;
+    $("mapMeta").textContent = "離線地圖範圍預覽 · 尚未開始下載";
+    $("mapBadge").classList.add("hide");
+  });
+}
 function mini(route) {
   const box = node("div", "mini"),
     svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -1158,7 +1195,7 @@ const activity = setupActivity({
   toast,
   failure,
 });
-const packageManager = setupPackageManager({ask,toast,failure,changed:()=>explore.refresh()});
+const packageManager = setupPackageManager({ask,toast,failure,changed:()=>explore.refresh(),previewBounds:previewOfflineBounds});
 const explore = setupExplore({
   map,
   nav,
@@ -1242,5 +1279,5 @@ async function boot() {
   nav("map");
   await setupOffline();
 }
-setupUnifiedUI({nav});
+setupUnifiedUI({nav,previewBounds:previewOfflineBounds});
 boot();
