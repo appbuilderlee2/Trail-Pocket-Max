@@ -1,0 +1,37 @@
+name: Mirror verified Para Wirra pilot
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/mirror-pilot.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download immutable release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p pilot-data
+          gh release download maps-v4-pilot --pattern 'para-wirra-map.pmtiles' --pattern 'para-wirra-search.index' --pattern 'para-wirra-routing.graph' --dir pilot-data --clobber
+      - name: Verify published SHA-256 values
+        run: |
+          cd pilot-data
+          echo '9885a59174f2a65620ea1b8a352247c69623bce56ea8d415ab1d4df40c175702  para-wirra-map.pmtiles' | sha256sum -c -
+          echo '30955fc9604369500ba98d8989a654b8632d610ac2486fd034de939f4049dc87  para-wirra-search.index' | sha256sum -c -
+          echo 'ba3813f335053f0f650144a9ff5bc40335845fb04bbf57aa54e84b1c6105f6ee  para-wirra-routing.graph' | sha256sum -c -
+      - name: Commit verified pilot files
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add pilot-data
+          git diff --cached --quiet || git commit -m 'Mirror verified Para Wirra pilot files'
+          git push
