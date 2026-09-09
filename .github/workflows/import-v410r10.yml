@@ -1,0 +1,31 @@
+name: Import exact Trail Pocket v4.1.0-r10
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-v410r10.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Trail-Pocket-Max
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace repository tree with exact v4.1.0-r10
+        shell: bash
+        run: |
+          set -euo pipefail
+          git remote add source https://github.com/appbuilderlee2/Trail-Pocket.git
+          git fetch --no-tags source cd757bedf2e9412bdf5bb5b2d1702b37b431da92
+          git read-tree --reset -u FETCH_HEAD
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Import exact Trail Pocket v4.1.0-r10 from cd757be [skip ci]"
+          git push origin HEAD:main
