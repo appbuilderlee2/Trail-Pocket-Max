@@ -105,3 +105,36 @@ nav{background:#fffffff2}nav button{width:160px;max-width:33.333%;display:flex;f
     max-height:min(calc(100dvh - 120px - env(safe-area-inset-bottom)),720px)!important;
   }
 }
+
+/* v4.1.7 compact settings */
+#settingsView>.eyebrow{margin-bottom:4px}
+#settingsView>h1{margin-bottom:16px}
+.settings-card{padding:15px 0}
+.settings-card h2{margin:0 0 8px;font-size:18px}
+.settings-card-head p{display:none}
+.settings-switch{margin:10px 0}
+.settings-switch small{display:none}
+.settings-list{margin-top:6px}
+.settings-list button{padding:12px 2px;min-height:54px}
+.settings-list button small{line-height:1.25}
+#cleanupLegacyStatus,#settingsMapSource small,#settingsLayers small,#settingsAlerts small{display:none}
+#gpsStatus{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35!important}
+.settings-help{margin-top:8px;border-top:1px solid var(--border)}
+.settings-help>summary,.settings-guide>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:44px;color:var(--muted);font-size:13px;font-weight:650}
+.settings-help>summary::-webkit-details-marker,.settings-guide>summary::-webkit-details-marker{display:none}
+.settings-help>summary::after,.settings-guide>summary::after{content:'⌄';font-size:16px}
+.settings-help[open]>summary::after,.settings-guide[open]>summary::after{content:'⌃'}
+.settings-help p,.settings-guide p{font-size:12px;line-height:1.65;margin:4px 0 12px}
+.settings-all-guide{margin-top:6px}
+.settings-all-guide .steps{margin:0;padding:0 0 0 22px}
+.settings-all-guide .steps li{padding:10px 0}
+.settings-all-guide .steps p{margin:4px 0 0}
+@media(max-width:600px){
+ .settings-card{padding:13px 0}
+ .settings-card h2{font-size:17px}
+ .settings-switch{gap:10px}
+ .settings-switch b{font-size:14px}
+ .settings-list button b{font-size:14px}
+ .settings-list button small{font-size:10px}
+ .settings-help>summary,.settings-guide>summary{min-height:42px;font-size:12px}
+}
