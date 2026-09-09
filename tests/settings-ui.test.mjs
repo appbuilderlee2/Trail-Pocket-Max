@@ -27,7 +27,12 @@ test('settings release version stays aligned with the service worker', async () 
     readFile(new URL('sw.js', root), 'utf8'),
   ]);
 
-  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.2/);
+  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.3/);
+});
+
+test('all expandable settings guides share the same spacing container', async () => {
+  const ui = await readFile(new URL('unified-ui.mjs', root), 'utf8');
+  assert.match(ui, /querySelector\('#settingsView \.settings-help-group'\)[^;]*\.append\(downloadGuide\)/);
 });
 
 test('bottom navigation labels are not repeated as page-top titles', async () => {

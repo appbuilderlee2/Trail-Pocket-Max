@@ -3,7 +3,7 @@ import * as store from './storage.mjs';
 
 const $ = id => document.getElementById(id);
 let previewOfflineBounds=(bounds,name)=>{};
-const APP_VERSION_FALLBACK='v4.2.2';
+const APP_VERSION_FALLBACK='v4.2.3';
 const paths = {
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
  saved:'<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
@@ -216,7 +216,7 @@ export function setupUnifiedUI(ctx) {
  const extras=document.createElement('details');extras.className='library-actions';extras.innerHTML='<summary>新增及匯入</summary><div></div>';const row=extras.querySelector('div'),routeHeading=document.querySelector('#routesView .heading');for(const b of [...routeHeading.querySelectorAll('button')]){if(b.id==='import')row.append(b);else b.hidden=true;}const routeTools=document.querySelector('#routesView .route-tools');if(routeTools)for(const b of [...routeTools.querySelectorAll('button')])row.append(b);$('routesView').prepend(extras);
  $('settingsActivityHistory').hidden=true;$('closeActivityHistory').hidden=true;const extraHistory=$('activityHistory');extraHistory.hidden=true;document.querySelectorAll('.eyebrow,.activity-heading small').forEach(e=>e.hidden=true);document.querySelector('#routesView h1').textContent='路線';$('startActivity').textContent='開始活動';
  $('checkAppUpdate').onclick=checkAppUpdate;$('cleanupLegacyMaps').onclick=cleanupLegacyMaps;$('settingsOfflineMaps').onclick=()=>ctx.nav('offline');
- const downloadGuide=document.createElement('details');downloadGuide.className='settings-guide';downloadGuide.innerHTML='<summary>離線地圖格式及下載說明</summary>';for(const note of [...$('offlineView').querySelectorAll('.fineprint')])downloadGuide.append(note);$('settingsView').append(downloadGuide);
+ const downloadGuide=document.createElement('details');downloadGuide.className='settings-guide';downloadGuide.innerHTML='<summary>離線地圖格式及下載說明</summary>';for(const note of [...$('offlineView').querySelectorAll('.fineprint')])downloadGuide.append(note);(document.querySelector('#settingsView .settings-help-group')||$('settingsView')).append(downloadGuide);
  for(const b of row.querySelectorAll('button'))b.textContent=b.textContent.replace(/^[＋✎▧]\s*/, '');for(const b of items.querySelectorAll('button'))b.textContent=b.textContent.replace(/^[☀⌁✎]\s*/, '');for(const [id,title]of [['settingsMapSource','地圖來源及 GeoPDF'],['settingsLayers','地圖圖層'],['settingsAlerts','偏离路線提醒']]){const b=$(id);b.querySelector('span').innerHTML=icon(id==='settingsMapSource'?'layers':id==='settingsLayers'?'map':'location');b.querySelector('i').innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 7 7-7 7"/></svg>';}
  setupOfflineLibraryLayout();
  unifyLocationControls();
