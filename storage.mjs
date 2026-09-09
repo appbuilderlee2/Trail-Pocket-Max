@@ -74,6 +74,10 @@ export const removeGeoPdf = (id) =>
   transaction(["geopdfs"], "readwrite", (t) =>
     t.objectStore("geopdfs").delete(id),
   );
+export const removeActivity = (id) =>
+  transaction(["activities"], "readwrite", (t) =>
+    t.objectStore("activities").delete(id),
+  );
 export const put = (name, value) =>
   transaction([name], "readwrite", (t) => t.objectStore(name).put(value));
 export async function putVerified(name, value, verify) {

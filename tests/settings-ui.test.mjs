@@ -27,12 +27,12 @@ test('settings release version stays aligned with the service worker', async () 
     readFile(new URL('sw.js', root), 'utf8'),
   ]);
 
-  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.4/);
+  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.5/);
 });
 
 test('mobile navigation counts the iPhone safe area only once', async () => {
   const css = await readFile(new URL('unified-ui.css', root), 'utf8');
-  const fix = css.match(/v4\.2\.4:[\s\S]*$/)?.[0] || '';
+  const fix = css.match(/v4\.2\.5:[\s\S]*$/)?.[0] || '';
   assert.match(fix, /bottom:max\(6px,env\(safe-area-inset-bottom\)\)/);
   assert.match(fix, /padding:5px 6px/);
   assert.doesNotMatch(fix, /padding[^;]*safe-area-inset-bottom/);
@@ -53,4 +53,18 @@ test('bottom navigation labels are not repeated as page-top titles', async () =>
   const settings = html.match(/<section id="settingsView"[\s\S]*?<\/section>\s*<\/main>/)?.[0] || '';
   assert.doesNotMatch(settings, /<h1>設定<\/h1>/);
   assert.doesNotMatch(ui, /library-header[^;]*<h1>我的<\/h1>/);
+});
+
+
+test('saved activities can be deleted and the mobile activity sheet stays compact', async () => {
+  const [ui, storage, css] = await Promise.all([
+    readFile(new URL('activity.mjs', root), 'utf8'),
+    readFile(new URL('storage.mjs', root), 'utf8'),
+    readFile(new URL('activity.css', root), 'utf8'),
+  ]);
+  assert.match(storage, /export const removeActivity/);
+  assert.match(ui, /id="deleteActivity"/);
+  assert.match(ui, /deleteSavedActivity/);
+  assert.match(css, /#activityProfile \{ min-height:0;padding:0; \}/);
+  assert.match(css, /\.activity-actions \{\s*position:static;/);
 });

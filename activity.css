@@ -25,7 +25,9 @@
 .activity-actions button { flex:1;min-height:52px;border:0;border-radius:18px;background:#e8e9e7;font-size:15px; }
 .activity-actions .activity-go { background:var(--lime);color:#10271e; }
 .activity-record { padding:16px 0;border-bottom:1px solid #ddd; }
-.activity-record button { display:block;margin-top:12px; }
+.activity-record-actions { display:flex;gap:8px;margin-top:12px; }
+.activity-record-actions button { margin:0; }
+button.danger { border-color:#e8c8c4;background:#fff6f4;color:#9d3027; }
 #activityStatus { color:#285c42;font-size:13px; }
 .activity-gps-drawer { margin-top:15px;padding-top:2px;border-top:1px solid var(--border); }
 .emergency-card { display:flex;justify-content:space-between;align-items:center;gap:14px;margin:12px 0;padding:16px;background:#f7f8f4;border:1px solid #dce4d8;border-radius:18px; }
@@ -216,15 +218,19 @@
   .activity-panel.has-activity.is-expanded .activity-stats strong { font-size:clamp(22px,7.3vw,34px); }
   .activity-panel.has-activity.is-expanded .activity-stats span { font-size:10px; }
 
-  #activityProfile { min-height:112px;padding:8px 0 0; }
+  #activityProfile { min-height:0;padding:0; }
+  #activityProfile .muted { margin:4px 0 10px; }
   .activity-actions {
-    position:sticky;
-    bottom:-17px;
-    z-index:3;
-    margin:18px -18px -16px;
-    padding:12px 18px 12px;
+    position:static;
+    margin:14px -18px 0;
+    padding:12px 18px;
     background:rgba(255,255,255,.96);
-    backdrop-filter:blur(14px);
+  }
+  .activity-panel.has-activity.is-expanded > #activityStatus {
+    margin:12px 0 4px;
+  }
+  .activity-panel.has-activity.is-expanded > .fineprint {
+    margin:8px 0 0;
   }
   .activity-gps-drawer .gps-bar { display:flex!important;margin:0;padding:12px 0; }
   .emergency-card { align-items:flex-start;flex-direction:column; }

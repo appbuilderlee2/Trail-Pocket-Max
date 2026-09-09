@@ -54,7 +54,7 @@ export function setupActivity(ctx) {
   const detail = el("dialog");
   detail.id = "activityDetailDialog";
   detail.innerHTML =
-    '<h2 id="savedActivityName"></h2><div id="savedActivityDetails"></div><div id="savedActivityProfile"></div><div class="row"><button id="exportActivity">匯出活動 GPX</button><button id="closeActivityDetail">關閉</button></div>';
+    '<h2 id="savedActivityName"></h2><div id="savedActivityDetails"></div><div id="savedActivityProfile"></div><div class="row"><button id="exportActivity">匯出活動 GPX</button><button id="deleteActivity" class="danger">刪除活動</button><button id="closeActivityDetail">關閉</button></div>';
   document.querySelector("main").append(history);
   document.body.append(detail);
   const entry = el("button", "活動紀錄");
@@ -342,14 +342,36 @@ export function setupActivity(ctx) {
           el("p", new Date(a.created).toLocaleString()),
           el("strong", m.km.toFixed(2) + " km · " + clock(m.ms)),
         );
-        const b = el("button", "查看活動");
-        b.onclick = () => showDetail(a);
-        card.append(b);
+        const actions = el("div", undefined, "activity-record-actions"),
+          viewButton = el("button", "查看活動"),
+          deleteButton = el("button", "刪除", "danger");
+        viewButton.onclick = () => showDetail(a);
+        deleteButton.onclick = () => deleteSavedActivity(a);
+        actions.append(viewButton, deleteButton);
+        card.append(actions);
         list.append(card);
       }
       ctx.nav("history");
     } catch (e) {
       ctx.toast(ctx.failure(e));
+    }
+  }
+  async function deleteSavedActivity(a) {
+    if (busy || !a?.id) return;
+    if (!confirm(`確定刪除「${a.name}」？刪除後無法復原。`)) return;
+    busy = true;
+    try {
+      await store.removeActivity(a.id);
+      if (viewed?.id === a.id) {
+        viewed = null;
+        if (detail.open) detail.close();
+      }
+      ctx.toast("活動已刪除。");
+      await showHistory();
+    } catch (e) {
+      ctx.toast(ctx.failure(e));
+    } finally {
+      busy = false;
     }
   }
   function showDetail(a) {
@@ -396,6 +418,9 @@ export function setupActivity(ctx) {
   $("activityHistory").onclick = showHistory;
   $("closeActivityHistory").onclick = () => ctx.nav("routes");
   $("closeActivityDetail").onclick = () => detail.close();
+  $("deleteActivity").onclick = () => {
+    if (viewed) deleteSavedActivity(viewed);
+  };
   $("activityName").onchange = () => {
     if (active) {
       active.name = $("activityName").value.trim() || active.name;
