@@ -1,0 +1,32 @@
+name: Import exact Trail Pocket v4.1.0-r2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-v410r2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Trail-Pocket-Max
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Import r2 tree while preserving workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          git remote add source https://github.com/appbuilderlee2/Trail-Pocket.git
+          git fetch --no-tags source 43fe6e648ca13a93fcc02e4ef006f9d6bd907e2e
+          git checkout --detach FETCH_HEAD
+          git checkout origin/main -- .github/workflows
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Import Trail Pocket v4.1.0-r2 content; preserve workflows temporarily [skip ci]"
+          git push --force origin HEAD:main
