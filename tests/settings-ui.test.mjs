@@ -27,12 +27,12 @@ test('settings release version stays aligned with the service worker', async () 
     readFile(new URL('sw.js', root), 'utf8'),
   ]);
 
-  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.6/);
+  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.7/);
 });
 
 test('mobile navigation counts the iPhone safe area only once', async () => {
   const css = await readFile(new URL('unified-ui.css', root), 'utf8');
-  const fix = css.match(/v4\.2\.6:[\s\S]*$/)?.[0] || '';
+  const fix = css.match(/v4\.2\.7:[\s\S]*$/)?.[0] || '';
   assert.match(fix, /bottom:max\(6px,env\(safe-area-inset-bottom\)\)/);
   assert.match(fix, /padding:5px 6px/);
   assert.doesNotMatch(fix, /padding[^;]*safe-area-inset-bottom/);
@@ -80,4 +80,13 @@ test('GeoPDF overlay avoids full-image work on every mobile pointer event', asyn
   assert.match(map, /drawImage\(this\.geoImage, sx, sy, sw, sh, sx, sy, sw, sh\)/);
   assert.match(map, /requestDraw\(\)/);
   assert.match(geoPdf, /cachedImageId === record\.id && cachedImage/);
+});
+
+
+test('production map downloads use Trail-Pocket-Max and migrate old saved URLs', async () => {
+  const manager = await readFile(new URL('package-manager.mjs', root), 'utf8');
+  assert.match(manager, /Trail-Pocket-Max\/releases\/download\/maps-v4-current/);
+  assert.match(manager, /currentReleaseUrls\(saved\)/);
+  assert.match(manager, /CURRENT_RELEASE_ROOT\+file\.url\.slice/);
+  assert.doesNotMatch(manager, /RELEASE_INDEX_URL='https:\/\/github\.com\/appbuilderlee2\/Trail-Pocket\/releases\/download\/maps-v4-current/);
 });

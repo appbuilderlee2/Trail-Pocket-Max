@@ -5,9 +5,20 @@ import { searchPackageEntries } from './package-search.mjs';
 import { mergePackageGraphs } from './package-routing.mjs';
 import { sha256File } from './sha256.mjs';
 
-const RELEASE_INDEX_URL='https://github.com/appbuilderlee2/Trail-Pocket/releases/download/maps-v4-current/sa-index.json';
+const CURRENT_RELEASE_ROOT='https://github.com/appbuilderlee2/Trail-Pocket-Max/releases/download/maps-v4-current/';
+const LEGACY_RELEASE_ROOT='https://github.com/appbuilderlee2/Trail-Pocket/releases/download/maps-v4-current/';
+const RELEASE_INDEX_URL=CURRENT_RELEASE_ROOT+'sa-index.json';
 const LOCAL_URL='./config/sa-index.json';
 const PILOT_URL='https://github.com/appbuilderlee2/Trail-Pocket/releases/download/maps-v4-pilot/sa-index.json';
+const currentReleaseUrls=manifest=>({
+  ...manifest,
+  files:(manifest.files||[]).map(file=>({
+    ...file,
+    url:typeof file.url==='string'&&file.url.startsWith(LEGACY_RELEASE_ROOT)
+      ? CURRENT_RELEASE_ROOT+file.url.slice(LEGACY_RELEASE_ROOT.length)
+      : file.url,
+  })),
+});
 const PRODUCTION_IDS=['adelaide-mount-lofty','fleurieu-kangaroo-island','yorke-mid-north','eyre-peninsula','flinders-far-north','murraylands-riverland','limestone-coast'];
 const mb=n=>n>=1048576?`${(n/1048576).toFixed(1)} MB`:`${Math.ceil(n/1024)} KB`;
 const overlap=(a,b)=>a[0]<b.east&&a[2]>b.west&&a[1]<b.north&&a[3]>b.south;
@@ -109,7 +120,7 @@ export function setupPackageManager(ctx){
       if(!response.ok)throw Error(`HTTP ${response.status}`);
       const index=await response.json();
       if(index.schema!==1||!Array.isArray(index.packages))throw Error('地圖包目錄格式無效');
-      return index.packages.map(validatePackageManifest);
+      return index.packages.map(item=>validatePackageManifest(currentReleaseUrls(item)));
     }finally{clearTimeout(timer);}
   }
 
@@ -141,7 +152,7 @@ export function setupPackageManager(ctx){
     try{
       db=await openPackageCatalog();catalog=packageCatalog(db);files=await openPackageFiles();await recordPackageMigration(catalog);
       [installed,downloads]=await Promise.all([catalog.list('packages'),catalog.list('downloads')]);
-      for(const saved of await catalog.list('manifests'))try{manifests.set(saved.id,validatePackageManifest(saved));}catch{}
+      for(const saved of await catalog.list('manifests'))try{const migrated=validatePackageManifest(currentReleaseUrls(saved));manifests.set(migrated.id,migrated);await catalog.put('manifests',migrated);}catch{}
     }catch(error){$('packageSummary').textContent=error.message.includes('未支援')?error.message:'未能開啟離線地圖儲存；現有資料不會被覆寫';}
     render();if(navigator.onLine&&catalog)updateIndex().catch(()=>{});
   }
