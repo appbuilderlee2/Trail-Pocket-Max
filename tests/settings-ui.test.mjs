@@ -27,7 +27,16 @@ test('settings release version stays aligned with the service worker', async () 
     readFile(new URL('sw.js', root), 'utf8'),
   ]);
 
-  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.3/);
+  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.4/);
+});
+
+test('mobile navigation counts the iPhone safe area only once', async () => {
+  const css = await readFile(new URL('unified-ui.css', root), 'utf8');
+  const fix = css.match(/v4\.2\.4:[\s\S]*$/)?.[0] || '';
+  assert.match(fix, /bottom:max\(6px,env\(safe-area-inset-bottom\)\)/);
+  assert.match(fix, /padding:5px 6px/);
+  assert.doesNotMatch(fix, /padding[^;]*safe-area-inset-bottom/);
+  assert.match(fix, /bottom:calc\(76px \+ env\(safe-area-inset-bottom\)\)!important/);
 });
 
 test('all expandable settings guides share the same spacing container', async () => {

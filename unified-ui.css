@@ -227,3 +227,15 @@ nav{background:#fffffff2}nav button{width:160px;max-width:33.333%;display:flex;f
  .settings-status-card,.settings-help-group{grid-column:1/-1}.settings-status-card{margin:0}
  #settingsView .settings-card{margin:0}.settings-location-card,.settings-storage{grid-column:span 2}.settings-action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* v4.2.4: count the iPhone bottom safe area once for the floating navigation. */
+@media(max-width:600px){
+ nav{
+  bottom:max(6px,env(safe-area-inset-bottom));
+  min-height:0;
+  padding:5px 6px;
+ }
+ #mapView .activity-panel:has(> #startActivity:not(.hide)){
+  bottom:calc(76px + env(safe-area-inset-bottom))!important;
+ }
+}

@@ -1,10 +1,10 @@
-# Trail Pocket PWA v4.2.3
+# Trail Pocket PWA v4.2.4
 
 Trail Pocket is an offline-first hiking PWA designed for iPhone and modern browsers, with a strong focus on reliable South Australia hiking maps.
 
 > **Current status:** the v4 production package infrastructure is live and the seven South Australia regions are available through the production catalog. Real-iPhone field testing remains recommended before relying on the app for a remote hike.
 
-## v4.2.3
+## v4.2.4
 
 - Rebuilt Settings with a clearer mobile-first hierarchy.
 - Added an at-a-glance offline shell and storage summary.
@@ -14,6 +14,7 @@ Trail Pocket is an offline-first hiking PWA designed for iPhone and modern brows
 - Keeps the combined location card title stable after the legacy compass controls initialise.
 - Removes the redundant Settings and My page titles to free more vertical space on phones.
 - Keeps all three expandable Settings help rows in one consistently spaced group.
+- Removes duplicated iPhone safe-area padding from the floating bottom navigation and lowers the idle activity card to match its compact height.
 
 ## v4.0.0-beta.7
 
