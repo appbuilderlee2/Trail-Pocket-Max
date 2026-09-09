@@ -27,5 +27,5 @@ test('settings release version stays aligned with the service worker', async () 
     readFile(new URL('sw.js', root), 'utf8'),
   ]);
 
-  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.0/);
+  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.1/);
 });

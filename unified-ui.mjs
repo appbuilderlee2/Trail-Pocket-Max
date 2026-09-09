@@ -3,7 +3,7 @@ import * as store from './storage.mjs';
 
 const $ = id => document.getElementById(id);
 let previewOfflineBounds=(bounds,name)=>{};
-const APP_VERSION_FALLBACK='v4.2.0';
+const APP_VERSION_FALLBACK='v4.2.1';
 const paths = {
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
  saved:'<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
@@ -130,7 +130,7 @@ function unifyLocationControls(){
  const gpsHandler=gpsButton.onclick,compassHandler=compassButton.onclick;
  const gpsCard=gpsButton.closest('.settings-card'),compassCard=compassButton.closest('.settings-card');
  if(gpsCard?.querySelector('h2'))gpsCard.querySelector('h2').textContent='定位與方向';
- if(compassCard?.querySelector('h2'))compassCard.querySelector('h2').textContent='方向狀態';
+ if(compassCard!==gpsCard&&compassCard?.querySelector('h2'))compassCard.querySelector('h2').textContent='方向狀態';
  compassButton.hidden=true;
  const normalizeLabel=()=>{
   const stopping=/停止定位/.test(gpsButton.textContent||'');
