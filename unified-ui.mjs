@@ -2,7 +2,7 @@ import { OFFLINE_REGIONS } from './offline-regions.mjs';
 import * as store from './storage.mjs';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION_FALLBACK='v4.1.7';
+const APP_VERSION_FALLBACK='v4.1.8';
 const paths = {
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
  saved:'<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
@@ -108,6 +108,16 @@ function compactSettingsPage(){
   guideTitle.before(details);
   details.append(steps);
   guideTitle.remove();
+ }
+ const looseNotes=[...settings.children].filter(el=>
+  el.matches?.('.notice, p.fineprint') && !el.closest('details')
+ );
+ if(looseNotes.length){
+  const details=document.createElement('details');
+  details.className='settings-guide settings-storage-guide';
+  details.innerHTML='<summary>儲存與離線地圖說明</summary>';
+  looseNotes[0].before(details);
+  for(const note of looseNotes)details.append(note);
  }
 }
 
