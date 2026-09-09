@@ -51,7 +51,7 @@ jobs:
           cp assets/icon-192.png assets/icon-512.png assets/devils-route.json assets/devils-base.json dist/assets/
           cp config/sa-index.json dist/config/sa-index.json
           if curl --fail --location --retry 3 --retry-delay 2 \
-            https://github.com/appbuilderlee2/Trail-Pocket/releases/download/maps-v4-current/sa-index.json \
+            https://github.com/appbuilderlee2/Trail-Pocket-Max/releases/download/maps-v4-current/sa-index.json \
             --output dist/config/sa-index.current.json; then
             node -e "const fs=require('fs');const p='dist/config/sa-index.current.json';const x=JSON.parse(fs.readFileSync(p));if(x.schema!==1||!Array.isArray(x.packages)||x.packages.length!==7)process.exit(1)"
             mv dist/config/sa-index.current.json dist/config/sa-index.json

@@ -27,12 +27,12 @@ test('settings release version stays aligned with the service worker', async () 
     readFile(new URL('sw.js', root), 'utf8'),
   ]);
 
-  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.7/);
+  for (const source of [html, ui, worker]) assert.match(source, /v4\.2\.8/);
 });
 
 test('mobile navigation counts the iPhone safe area only once', async () => {
   const css = await readFile(new URL('unified-ui.css', root), 'utf8');
-  const fix = css.match(/v4\.2\.7:[\s\S]*$/)?.[0] || '';
+  const fix = css.match(/count the iPhone bottom safe area once[\s\S]*$/)?.[0] || '';
   assert.match(fix, /bottom:max\(6px,env\(safe-area-inset-bottom\)\)/);
   assert.match(fix, /padding:5px 6px/);
   assert.doesNotMatch(fix, /padding[^;]*safe-area-inset-bottom/);
@@ -89,4 +89,12 @@ test('production map downloads use Trail-Pocket-Max and migrate old saved URLs',
   assert.match(manager, /currentReleaseUrls\(saved\)/);
   assert.match(manager, /CURRENT_RELEASE_ROOT\+file\.url\.slice/);
   assert.doesNotMatch(manager, /RELEASE_INDEX_URL='https:\/\/github\.com\/appbuilderlee2\/Trail-Pocket\/releases\/download\/maps-v4-current/);
+});
+
+
+test('Pages deployment mirrors the current production packages and verifies Range delivery', async () => {
+  const workflow = await readFile(new URL('.github/workflows/pages.yml', root), 'utf8');
+  assert.match(workflow, /Trail-Pocket-Max\/releases\/download\/maps-v4-current\/sa-index\.json/);
+  assert.match(workflow, /Mirror production packages for same-origin browser downloads/);
+  assert.match(workflow, /Range: bytes=0-1023/);
 });
