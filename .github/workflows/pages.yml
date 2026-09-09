@@ -1,0 +1,152 @@
+name: Deploy Trail Pocket to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Install pinned map runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run automated reliability tests
+        run: npm test
+
+      - name: Prepare static PWA
+        run: |
+          mkdir -p dist/assets dist/vendor dist/config dist/packages
+          cp backup.mjs wake-lock.mjs heading.mjs reliability-core.mjs markers.mjs offline-download.mjs offline-search.mjs offline-regions.mjs package-search.mjs package-routing.mjs routing-core.mjs routing-client.mjs route-worker.mjs offline-package.mjs package-storage.mjs package-manifest.mjs package-downloader.mjs package-manager.mjs package-manager-base.mjs package-manager.css package-manager-controls.css sha256.mjs vector-map.mjs vector-map.css outdoor-style.mjs pmtiles-opfs.mjs activity.mjs activity-core.mjs activity.css geopdf.mjs geopdf-core.mjs geopdf-parser.mjs geopdf-render.mjs geopdf.css map-source.css index.html style.css adventure.css app.mjs core.mjs storage.mjs map.mjs adventure.mjs adventure-core.mjs explore.mjs explore-base.mjs explore-core.mjs online-map.mjs terrain.mjs explore.css sw.js manifest.webmanifest hiking-ui.css unified-ui.css unified-ui.mjs unified-ui-base.mjs v41-enhancements.mjs dist/
+          cp vendor/pdf-lib.min.mjs vendor/pdf.min.mjs vendor/pdf.worker.min.mjs vendor/pdf-lib-LICENSE.md vendor/pdfjs-LICENSE dist/vendor/
+          cp node_modules/maplibre-gl/dist/maplibre-gl.mjs node_modules/maplibre-gl/dist/maplibre-gl-shared.mjs node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs node_modules/maplibre-gl/dist/maplibre-gl.css dist/vendor/
+          cp node_modules/maplibre-gl/LICENSE.txt dist/vendor/maplibre-LICENSE.txt
+          cp node_modules/pmtiles/dist/pmtiles.js dist/vendor/pmtiles.js
+          cp assets/icon-192.png assets/icon-512.png assets/devils-route.json assets/devils-base.json dist/assets/
+          cp config/sa-index.json dist/config/sa-index.json
+          if curl --fail --location --retry 3 --retry-delay 2 \
+            https://github.com/appbuilderlee2/Trail-Pocket/releases/download/maps-v4-current/sa-index.json \
+            --output dist/config/sa-index.current.json; then
+            node -e "const fs=require('fs');const p='dist/config/sa-index.current.json';const x=JSON.parse(fs.readFileSync(p));if(x.schema!==1||!Array.isArray(x.packages)||x.packages.length!==7)process.exit(1)"
+            mv dist/config/sa-index.current.json dist/config/sa-index.json
+            echo 'Using current seven-region production catalog.'
+          else
+            rm -f dist/config/sa-index.current.json
+            echo 'Current production catalog unavailable; deploying repository fallback.'
+          fi
+          if [ -d pilot-data ]; then cp -R pilot-data dist/; fi
+          touch dist/.nojekyll
+
+      - name: Mirror production packages for same-origin browser downloads
+        run: |
+          node <<'NODE' > /tmp/package-files.tsv
+          const fs=require('fs');
+          const path='dist/config/sa-index.json';
+          const index=JSON.parse(fs.readFileSync(path,'utf8'));
+          if(index.schema!==1 || !Array.isArray(index.packages) || index.packages.length!==7) throw Error('Production catalog must contain exactly seven regions');
+          let total=0;
+          for(const pkg of index.packages){
+            if(!Array.isArray(pkg.files) || pkg.files.length!==3) throw Error(`${pkg.id}: expected three package files`);
+            for(const file of pkg.files){
+              const source=new URL(file.url);
+              const filename=source.pathname.split('/').pop();
+              if(!filename || !Number.isSafeInteger(file.size) || file.size<=0 || !/^[a-f0-9]{64}$/i.test(file.sha256)) throw Error(`${pkg.id}: invalid file metadata`);
+              if(file.encoding && file.encoding!=='gzip') throw Error(`${pkg.id}: unsupported package encoding ${file.encoding}`);
+              total+=file.size;
+              process.stdout.write(`${file.url}\t${filename}\t${file.size}\t${file.sha256}\n`);
+              file.url=`./packages/${filename}`;
+            }
+          }
+          if(total>900*1024*1024) throw Error(`Production packages exceed Pages safety budget: ${total}`);
+          fs.writeFileSync(path,JSON.stringify(index,null,2)+'\n');
+          console.error(`Mirroring ${(total/1024/1024).toFixed(1)} MiB of production packages.`);
+          NODE
+          while IFS=$'\t' read -r url filename size sha; do
+            echo "Downloading $filename"
+            curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 "$url" --output "dist/packages/$filename"
+            test "$(wc -c < "dist/packages/$filename")" -eq "$size"
+            echo "$sha  dist/packages/$filename" | sha256sum --check --status
+          done < /tmp/package-files.tsv
+
+      - name: Validate real production search and routing data
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),zlib=require('zlib');
+          const index=JSON.parse(fs.readFileSync('dist/config/sa-index.json','utf8'));
+          const readJson=file=>{
+            const path=`dist/${file.url.replace(/^\.\//,'')}`;
+            const raw=fs.readFileSync(path);
+            const bytes=file.encoding==='gzip'?zlib.gunzipSync(raw):raw;
+            return JSON.parse(bytes.toString('utf8'));
+          };
+          let packed=0,unpacked=0;
+          for(const pkg of index.packages){
+            const byName=Object.fromEntries(pkg.files.map(file=>[file.name,file]));
+            const search=readJson(byName['search.index']);
+            if(search.version!==1 || !Array.isArray(search.entries)) throw Error(`${pkg.id}: invalid search.index`);
+            for(const entry of search.entries.slice(0,1000)) if(!entry || typeof entry.n!=='string' || !Array.isArray(entry.p) || entry.p.length!==2 || !entry.p.every(Number.isFinite) || typeof entry.t!=='string') throw Error(`${pkg.id}: invalid compact search entry`);
+            const graph=readJson(byName['routing.graph']);
+            if(graph.version!==1 || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) throw Error(`${pkg.id}: invalid routing.graph`);
+            if(graph.nodes.length<1 || graph.edges.length<1) throw Error(`${pkg.id}: empty walking graph`);
+            for(const node of graph.nodes.slice(0,1000)) if(!Array.isArray(node)||node.length!==2||!node.every(Number.isFinite)) throw Error(`${pkg.id}: invalid graph node`);
+            for(const edge of graph.edges.slice(0,1000)) if(!Array.isArray(edge)||edge.length!==3||!edge.every(Number.isFinite)) throw Error(`${pkg.id}: invalid graph edge`);
+            for(const key of ['search.index','routing.graph']){
+              const f=byName[key],raw=fs.readFileSync(`dist/${f.url.replace(/^\.\//,'')}`);packed+=raw.length;unpacked+=(f.encoding==='gzip'?zlib.gunzipSync(raw):raw).length;
+            }
+            console.log(`${pkg.id}: ${search.entries.length} search entries, ${graph.nodes.length} graph nodes, ${graph.edges.length} directed edges`);
+          }
+          console.log(`Search/routing compression: ${(unpacked/1048576).toFixed(1)} MiB -> ${(packed/1048576).toFixed(1)} MiB (${Math.round(packed/unpacked*100)}%)`);
+          NODE
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Validate live same-origin Range delivery
+        run: |
+          BASE='${{ steps.deployment.outputs.page_url }}'
+          MAP_PATH=$(node -e "const x=require('./dist/config/sa-index.json');const p=x.packages.find(p=>p.files?.some(f=>f.name==='map.pmtiles'));const f=p?.files.find(f=>f.name==='map.pmtiles');if(!f?.url)process.exit(1);process.stdout.write(f.url.replace(/^\.\//,''))")
+          URL="${BASE}${MAP_PATH}"
+          success=0
+          for attempt in $(seq 1 24); do
+            rm -f /tmp/live-range.bin /tmp/live-range-headers.txt
+            if curl --silent --show-error --fail -H 'Range: bytes=0-1023' -D /tmp/live-range-headers.txt "$URL" -o /tmp/live-range.bin; then success=1; break; fi
+            echo "Live Pages package not propagated yet (attempt ${attempt}/24)."
+            sleep 5
+          done
+          test "$success" -eq 1
+          echo "Live Range response bytes: $(wc -c < /tmp/live-range.bin)"
+          cat /tmp/live-range-headers.txt
+          test "$(wc -c < /tmp/live-range.bin)" -eq 1024
+          grep -Eqi '^content-range: bytes 0-1023/[0-9]+' /tmp/live-range-headers.txt
