@@ -2,7 +2,7 @@ import { OFFLINE_REGIONS } from './offline-regions.mjs';
 import * as store from './storage.mjs';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION_FALLBACK='v4.1.8';
+const APP_VERSION_FALLBACK='v4.1.9';
 const paths = {
  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"/>',
  saved:'<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
@@ -121,6 +121,29 @@ function compactSettingsPage(){
  }
 }
 
+function unifyLocationControls(){
+ const gpsButton=$('gps'),compassButton=$('compassToggle');
+ if(!gpsButton||!compassButton)return;
+ const gpsHandler=gpsButton.onclick,compassHandler=compassButton.onclick;
+ const gpsCard=gpsButton.closest('.settings-card'),compassCard=compassButton.closest('.settings-card');
+ if(gpsCard?.querySelector('h2'))gpsCard.querySelector('h2').textContent='定位與方向';
+ if(compassCard?.querySelector('h2'))compassCard.querySelector('h2').textContent='方向狀態';
+ compassButton.hidden=true;
+ const normalizeLabel=()=>{
+  const stopping=/停止定位/.test(gpsButton.textContent||'');
+  const label=stopping?'■ 停止定位與方向':'◎ 開始定位與方向';
+  if(gpsButton.textContent!==label)gpsButton.textContent=label;
+ };
+ gpsButton.onclick=event=>{
+  const stopping=/停止定位/.test(gpsButton.textContent||'');
+  gpsHandler?.call(gpsButton,event);
+  if(!stopping)compassHandler?.call(compassButton,event);
+  requestAnimationFrame(normalizeLabel);
+ };
+ new MutationObserver(normalizeLabel).observe(gpsButton,{childList:true,subtree:true,characterData:true});
+ normalizeLabel();
+}
+
 async function checkAppUpdate(){
  const button=$('checkAppUpdate'),status=$('updateCheckStatus');
  if(!button||!status)return;
@@ -191,6 +214,7 @@ export function setupUnifiedUI(ctx) {
  for(const b of row.querySelectorAll('button'))b.textContent=b.textContent.replace(/^[＋✎▧]\s*/, '');for(const b of items.querySelectorAll('button'))b.textContent=b.textContent.replace(/^[☀⌁✎]\s*/, '');for(const [id,title]of [['settingsMapSource','地圖來源及 GeoPDF'],['settingsLayers','地圖圖層'],['settingsAlerts','偏离路線提醒']]){const b=$(id);b.querySelector('span').innerHTML=icon(id==='settingsMapSource'?'layers':id==='settingsLayers'?'map':'location');b.querySelector('i').innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 7 7-7 7"/></svg>';}
  setupOfflineLibraryLayout();
  compactSettingsPage();
+ unifyLocationControls();
  requestAnimationFrame(syncParkRows);
  syncVisibleVersion();
  navigator.serviceWorker?.addEventListener('controllerchange',()=>setTimeout(syncVisibleVersion,50));
