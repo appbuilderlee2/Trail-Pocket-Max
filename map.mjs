@@ -284,6 +284,42 @@ export class TrailMap {
     this.regionLayers = records.map((r) => this.makeLayer(r));
     this.draw();
   }
+  setPreviewBounds(bounds, label = "可離線範圍") {
+    this.previewBounds = bounds || null;
+    this.previewLabel = label || "可離線範圍";
+    this.draw();
+  }
+  drawPreviewBounds(c) {
+    const b = this.previewBounds;
+    if (!b || this.geoPdf && !this.geoOverlay) return;
+    const a = this.screen(project([b.west, b.north]));
+    const z = this.screen(project([b.east, b.south]));
+    const left = Math.min(a[0], z[0]), right = Math.max(a[0], z[0]);
+    const top = Math.min(a[1], z[1]), bottom = Math.max(a[1], z[1]);
+    const width = right - left, height = bottom - top;
+    c.save();
+    c.fillStyle = "rgba(17,45,35,.18)";
+    c.beginPath();
+    c.rect(0,0,this.w,this.h);
+    c.rect(left,top,width,height);
+    c.fill("evenodd");
+    c.strokeStyle = "#16845d";
+    c.lineWidth = 4;
+    c.setLineDash([]);
+    c.strokeRect(left,top,width,height);
+    const text = "可離線範圍 · " + this.previewLabel;
+    c.font = "bold 12px sans-serif";
+    const tw = Math.min(Math.max(120,c.measureText(text).width + 20), Math.max(120,this.w - 24));
+    const tx = Math.max(12, Math.min(left + 8, this.w - tw - 12));
+    const ty = Math.max(48, Math.min(top + 8, this.h - 42));
+    c.fillStyle = "rgba(25,63,50,.94)";
+    c.fillRect(tx,ty,tw,30);
+    c.fillStyle = "#fff";
+    c.textAlign = "left";
+    c.textBaseline = "middle";
+    c.fillText(text,tx+10,ty+15,tw-20);
+    c.restore();
+  }
   viewBounds(inset = 0) {
     return viewportBounds(
       this.center,
@@ -935,6 +971,7 @@ export class TrailMap {
       c.lineWidth = 3;
       c.stroke();
     }
+    this.drawPreviewBounds(c);
     const lat = unproject(this.center)[1],
       mpp = this.units * Math.cos((lat * Math.PI) / 180),
       target = 85 * mpp,
